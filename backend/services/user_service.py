@@ -1,6 +1,7 @@
 from app.models.user import User
+from app.core.security import hash_password,verify_password
 def create_user(db,username,email,password):
-    user=User(username=username,email=email,hashed_password=password)
+    user=User(username=username,email=email,hashed_password=hash_password(password))
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -16,10 +17,18 @@ def update_username(db,email,new_username):
         db.commit()
         db.refresh(user)
         return user
-
+    
 def delete_user(db,email):
     user=get_user_by_email(db,email)
     if user:
         db.delete(user)
         db.commit()
+    return user
+
+def authenticate_user(db,email,password):
+    user=get_user_by_email(db,email)
+    if not user:
+        return None
+    if not verify_password(password,user.hashed_password):
+        return None
     return user

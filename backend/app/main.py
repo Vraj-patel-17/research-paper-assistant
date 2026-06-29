@@ -1,7 +1,7 @@
 from fastapi import FastAPI,Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
-from services.user_service import create_user,get_user_by_email,update_username,delete_user
+from services.user_service import create_user,get_user_by_email,update_username,delete_user,authenticate_user
 from schemas.user import UserCreate
 app=FastAPI()
 @app.get("/")
@@ -32,3 +32,9 @@ def delete_user_route(email:str,db:Session=Depends(get_db)):
     if not user:
         return { "message":"User not found"}
     return { "message":"Deleted"}
+@app.post('/login')
+def authenticate(email:str,password:str,db: Session=Depends(get_db)):
+    user=authenticate_user(db,email,password)
+    if not user:
+        return {"Wrong Password"}
+    return {"message":"Login Successful"}
