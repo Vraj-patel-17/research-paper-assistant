@@ -2,7 +2,8 @@ from fastapi import FastAPI,Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
 from services.user_service import create_user,get_user_by_email,update_username,delete_user,authenticate_user
-from schemas.user import UserCreate
+from schemas.user import UserCreate,UserLogin
+from app.core.security import create_access_token
 app=FastAPI()
 @app.get("/")
 async def root():
@@ -33,8 +34,9 @@ def delete_user_route(email:str,db:Session=Depends(get_db)):
         return { "message":"User not found"}
     return { "message":"Deleted"}
 @app.post('/login')
-def authenticate(email:str,password:str,db: Session=Depends(get_db)):
-    user=authenticate_user(db,email,password)
+def authenticate(user: UserLogin,db: Session=Depends(get_db)):
+    user=authenticate_user(db,user.email,user.password)
     if not user:
         return {"Wrong Password"}
-    return {"message":"Login Successful"}
+    token=create_access_token({"sub":user.email})
+    return {"access_token":token,"token_type":"bearer"}
