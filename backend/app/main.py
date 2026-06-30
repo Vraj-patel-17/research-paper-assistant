@@ -1,9 +1,10 @@
-from fastapi import FastAPI,Depends
+from fastapi import FastAPI,Depends,HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
 from services.user_service import create_user,get_user_by_email,update_username,delete_user,authenticate_user
 from schemas.user import UserCreate,UserLogin
-from app.core.security import create_access_token
+from app.core.security import create_access_token,get_current_user
 app=FastAPI()
 @app.get("/")
 async def root():
@@ -34,9 +35,12 @@ def delete_user_route(email:str,db:Session=Depends(get_db)):
         return { "message":"User not found"}
     return { "message":"Deleted"}
 @app.post('/login')
-def authenticate(user: UserLogin,db: Session=Depends(get_db)):
-    user=authenticate_user(db,user.email,user.password)
+def authenticate(form_data:OAuth2PasswordRequestForm=Depends(),db: Session=Depends(get_db)):
+    user=authenticate_user(db,form_data.username,form_data.password)
     if not user:
-        return {"Wrong Password"}
+        raise HTTPException(status_code=401,detail="Invalid credentials")
     token=create_access_token({"sub":user.email})
     return {"access_token":token,"token_type":"bearer"}
+@app.get("/me")
+def get_me(current_user=Depends(get_current_user)):
+    return {"id":current_user.id,"email":current_user.email}
