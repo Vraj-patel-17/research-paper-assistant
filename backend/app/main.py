@@ -20,19 +20,19 @@ def create_new_user(user: UserCreate,db: Session=Depends(get_db)):
 def get_user(email:str,db: Session=Depends(get_db)):
     user=get_user_by_email(db,"vraj@gmail.com")
     if not user:
-        return {"message":"user not found"}
+        raise HTTPException(status_code=401,detail="User not Found")
     return { "id": user.id,"username":user.username,"email":user.email }
 @app.put("/users/{email}")
 def update_user(email:str,new_username:str,db: Session=Depends(get_db)):
     user=update_username(db,email,new_username)
     if not user:
-        return { "message":"User not found"}
+        raise HTTPException(status_code=401,detail="User not Found")
     return {"id":user.id,"username":user.username}
 @app.delete("/users/{email}")
 def delete_user_route(email:str,db:Session=Depends(get_db)):
     user=delete_user(db,email)
     if not user:
-        return { "message":"User not found"}
+        raise HTTPException(status_code=401,detail="User not Found")
     return { "message":"Deleted"}
 @app.post('/login')
 def authenticate(form_data:OAuth2PasswordRequestForm=Depends(),db: Session=Depends(get_db)):
