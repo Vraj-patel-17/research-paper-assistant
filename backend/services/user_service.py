@@ -1,16 +1,17 @@
 from app.models.user import User
+from sqlalchemy.orm import Session
 from app.core.security import hash_password,verify_password
-def create_user(db,username,email,password):
+def create_user(db:Session,username,email,password):
     user=User(username=username,email=email,hashed_password=hash_password(password))
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
 
-def get_user_by_email(db,email):
+def get_user_by_email(db:Session,email):
     return ( db.query(User).filter(User.email==email).first())
 
-def update_username(db,email,new_username):
+def update_username(db:Session,email,new_username):
     user=get_user_by_email(db,email)
     if user:
         user.username=new_username
@@ -18,14 +19,14 @@ def update_username(db,email,new_username):
         db.refresh(user)
         return user
     
-def delete_user(db,email):
+def delete_user(db:Session,email):
     user=get_user_by_email(db,email)
     if user:
         db.delete(user)
         db.commit()
     return user
 
-def authenticate_user(db,email,password):
+def authenticate_user(db:Session,email,password):
     user=get_user_by_email(db,email)
     if not user:
         return None
