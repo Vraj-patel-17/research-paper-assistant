@@ -6,7 +6,7 @@ from app.database import Base
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from models.bookmark import Bookmark
+    from app.models.bookmark import Bookmark
 class User(Base):
     __tablename__="users"
     
@@ -16,3 +16,4 @@ class User(Base):
     hashed_password: Mapped[str]=mapped_column(String(100))
     created_at: Mapped[datetime.datetime]=mapped_column(DateTime(timezone=True),server_default=func.now())
     bookmarks:Mapped[list["Bookmark"]]=relationship(back_populates="user",cascade="all,delete-orphan")
+    collections = relationship("Collection",back_populates="user",cascade="all, delete-orphan",)

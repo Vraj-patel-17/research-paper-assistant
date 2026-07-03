@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Depends,HTTPException
+from fastapi import FastAPI,Depends,HTTPException,status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -8,6 +8,12 @@ from app.core.security import create_access_token,get_current_user
 from app.services.paper_services import get_all_papers,get_paper_by_id,search_papers
 from app.services.bookmark_services import add_bookmark,remove_bookmark,get_user_bookmarks
 from app.models.user import User
+from app.schemas.collection import CollectionCreate,CollectionResponse
+from app.services.collection_services import create_collection,get_collection_by_id,get_user_collections,delete_collection
+from app.schemas.collection_paper import AddPaperToCollection
+from app.schemas.paper import PaperResponse
+from app.services.collection_services import add_paper_to_collection,get_collection_papers,remove_paper_from_collection
+
 app=FastAPI()
 @app.get("/")
 async def root():
@@ -84,3 +90,55 @@ def delete_bookmark(paper_id: int,db: Session = Depends(get_db),current_user: Us
     return {
         "message": "Bookmark removed successfully"
     }
+@app.post("/collections",response_model=CollectionResponse,status_code=status.HTTP_201_CREATED,)
+def create_new_collection(collection: CollectionCreate,db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),):
+    return create_collection(db=db,user_id=current_user.id,collection_data=collection,)
+@app.get("/collections",response_model=list[CollectionResponse],)
+def get_collections(db: Session = Depends(get_db),current_user: User = Depends(get_current_user),):
+    return get_user_collections(db=db,user_id=current_user.id,)
+@app.get("/collections/{collection_id}",response_model=CollectionResponse,)
+def get_collection(collection_id: int,db: Session = Depends(get_db),current_user: User = Depends(get_current_user),):
+    return get_collection_by_id(db=db,collection_id=collection_id,user_id=current_user.id,)
+@app.delete("/collections/{collection_id}",status_code=status.HTTP_204_NO_CONTENT,)
+def remove_collection(collection_id: int,db: Session = Depends(get_db),current_user: User = Depends(get_current_user),):
+    delete_collection(
+        db=db,collection_id=collection_id,user_id=current_user.id,)
+@app.post("/collections/{collection_id}/papers",status_code=status.HTTP_201_CREATED)
+def add_paper(
+    collection_id:int,
+    data:AddPaperToCollection,
+    db:Session=Depends(get_db),
+    current_user:User=Depends(get_current_user)
+):
+    add_paper_to_collection(
+        db=db,
+        collection_id=collection_id,
+        user_id=current_user.id,
+        data=data
+    )
+    return {"message":"Paper added to collection successfully"}
+@app.get("/collections/{collection_id}/papers",response_model=list[PaperResponse])
+def get_papers(
+    collection_id:int,
+    db:Session=Depends(get_db),
+    current_user:User=Depends(get_current_user)
+):
+    return get_collection_papers(
+        db=db,
+        collection_id=collection_id,
+        user_id=current_user.id
+    )
+@app.delete("/collections/{collection_id}/papers/{paper_id}",status_code=status.HTTP_204_NO_CONTENT)
+def remove_paper(
+    collection_id:int,
+    paper_id:int,
+    db:Session=Depends(get_db),
+    current_user:User=Depends(get_current_user)
+):
+    remove_paper_from_collection(
+        db=db,
+        collection_id=collection_id,
+        paper_id=paper_id,
+        user_id=current_user.id
+    )

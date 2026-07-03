@@ -6,8 +6,8 @@ from app.database import Base
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from models.user import User
-    from models.paper import Paper
+    from app.models.user import User
+    from app.models.paper import Paper
 class Bookmark(Base):
     __tablename__="bookmarks"
     id: Mapped[int]=mapped_column(primary_key=True)
