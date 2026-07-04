@@ -5,3 +5,5 @@ psycoppg2-binary
 python-dotenv
 passlib
 bcrypt
+feedparser
+httpx
