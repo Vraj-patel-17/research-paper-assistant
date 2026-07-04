@@ -12,3 +12,4 @@ class Collection(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"),nullable=False,)
 
     user = relationship("User",back_populates="collections",)
+    collection_papers = relationship("CollectionPaper",back_populates="collection",cascade="all, delete-orphan",)
