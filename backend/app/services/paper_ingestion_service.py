@@ -29,8 +29,14 @@ class PaperIngestionService:
                 publication_date=paper.published_at,
             )
             new_papers.append(db_paper)
-            
+        total = len(papers)
+        imported = len(new_papers)
+        skipped = total - imported  
         self.db.add_all(new_papers)
         self.db.commit()
 
-        return len(new_papers)
+        return {
+                "total": total,
+                "imported": imported,
+                "skipped": skipped,
+                }

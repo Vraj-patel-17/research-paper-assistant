@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.routes import auth,bookmark_route,user_route,paper_route,collection_paper_route,collection_route
-
+from app.routes.ingestion import router as ingestion_router
 app=FastAPI()
 @app.get("/")
 async def root():
@@ -14,6 +14,7 @@ app.include_router(paper_route.router)
 app.include_router(bookmark_route.router)
 app.include_router(collection_route.router)
 app.include_router(collection_paper_route.router)
+app.include_router(ingestion_router)
 
 
 
