@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.bookmark import Bookmark
+    from app.models.paper_topic import PaperTopic
 class Paper(Base):
     __tablename__="papers"
     __table_args__ = (
@@ -24,3 +25,7 @@ class Paper(Base):
     created_at: Mapped[datetime.datetime]=mapped_column(DateTime(timezone=True),server_default=func.now())
     bookmarks:Mapped[list["Bookmark"]]=relationship(back_populates="paper",cascade="all,delete-orphan")
     collection_papers = relationship("CollectionPaper",back_populates="paper",cascade="all, delete-orphan",)
+    paper_topics: Mapped[list["PaperTopic"]] = relationship(
+    back_populates="paper",
+    cascade="all, delete-orphan",
+)
