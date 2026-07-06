@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.models.paper import Paper
 from app.services.arxiv_services import ArxivService
-
+from app.services.topic_service import TopicService
 class PaperIngestionService:
     def __init__(self, db: Session):
         self.db = db
@@ -10,6 +10,7 @@ class PaperIngestionService:
 
     def ingest_arxiv(self,query: str,start: int = 0,max_results: int = 20,) -> int:
         papers = self.arxiv.search(query=query,start=start,max_results=max_results,)
+        topic_service = TopicService(self.db)
         if not papers:
             return 0
         external_ids = [paper.external_id for paper in papers]
@@ -34,7 +35,10 @@ class PaperIngestionService:
         skipped = total - imported  
         self.db.add_all(new_papers)
         self.db.commit()
-
+        for paper in new_papers:
+            self.db.refresh(paper)
+        for paper in new_papers:
+            topic_service.assign_topics(paper)
         return {
                 "total": total,
                 "imported": imported,
