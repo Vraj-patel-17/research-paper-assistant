@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.paper_topic import PaperTopic
+    from app.models.paper import Paper
+
 
 class Topic(Base):
     __tablename__ = "topics"
@@ -24,3 +26,6 @@ class Topic(Base):
         back_populates="topic",
         cascade="all, delete-orphan",
     )
+    papers: Mapped[list["Paper"]] = relationship("Paper",
+    secondary="paper_topics",
+    viewonly=True,)

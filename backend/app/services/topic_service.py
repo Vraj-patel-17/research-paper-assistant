@@ -13,7 +13,22 @@ class TopicService:
             return
         topics=(self.db.query(Topic).filter(Topic.name.in_(topic_names)).all())
         for topic in topics:
-            self.db.add(PaperTopic(paper_id=paper.id,topic_id=topic.id))
+            exists = (
+            self.db.query(PaperTopic)
+            .filter(
+                PaperTopic.paper_id == paper.id,
+                PaperTopic.topic_id == topic.id,
+            )
+            .first()
+        )
+            if not exists:
+                self.db.add(
+                PaperTopic(
+                    paper_id=paper.id,
+                    topic_id=topic.id,
+                )
+            )
+
         self.db.commit()
     def list_topics(self):
         return (
