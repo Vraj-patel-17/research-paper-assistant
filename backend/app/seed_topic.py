@@ -2,32 +2,32 @@ from app.database import SessionLocal
 from app.models.topic import Topic
 
 TOPICS = [
-    "Machine Learning",
-    "Deep Learning",
-    "Natural Language Processing",
-    "Computer Vision",
-    "Robotics",
-    "Reinforcement Learning",
-    "Generative AI",
-    "Graph Neural Networks",
-    "Quantum Computing",
-    "Cybersecurity",
-    "Data Science",
+    ("Machine Learning", "machine-learning"),
+    ("Deep Learning", "deep-learning"),
+    ("Natural Language Processing", "nlp"),
+    ("Computer Vision", "computer-vision"),
+    ("Robotics", "robotics"),
+    ("Reinforcement Learning", "reinforcement-learning"),
+    ("Generative AI", "generative-ai"),
+    ("Graph Neural Networks", "graph-neural-networks"),
+    ("Quantum Computing", "quantum-computing"),
+    ("Cybersecurity", "cybersecurity"),
+    ("Data Science", "data-science"),
 ]
 
 def seed_topics():
     db = SessionLocal()
 
     try:
-        for topic_name in TOPICS:
+        for topic_name,slug in TOPICS:
             exists = (
                 db.query(Topic)
-                .filter(Topic.name == topic_name)
+                .filter(Topic.slug==slug)
                 .first()
             )
 
             if not exists:
-                db.add(Topic(name=topic_name))
+                db.add(Topic(name=topic_name,slug=slug))
 
         db.commit()
         print("Topics seeded successfully!")

@@ -6,11 +6,12 @@ from app.services.paper_services import get_all_papers,get_paper_by_id
 from fastapi import Depends,HTTPException
 router=APIRouter()
 @router.get("/papers")
-def get_papers(db:Session=Depends(get_db),q: Optional[str] = None,source: Optional[str] = None,limit: int = 20,offset: int = 0,):
+def get_papers(db:Session=Depends(get_db),q: Optional[str] = None,source: Optional[str] = None,topic:Optional[str]=None,limit: int = 20,offset: int = 0,):
     return get_all_papers(
         db=db,
         q=q,
         source=source,
+        topic=topic,
         limit=limit,
         offset=offset,
     )

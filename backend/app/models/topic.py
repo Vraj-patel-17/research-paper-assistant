@@ -19,6 +19,7 @@ class Topic(Base):
         unique=True,
         nullable=False,
     )
+    slug:Mapped[str]= mapped_column(String(100), unique=True, nullable=False, index=True)
     paper_topics: Mapped[list["PaperTopic"]] = relationship(
         back_populates="topic",
         cascade="all, delete-orphan",

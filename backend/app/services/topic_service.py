@@ -15,3 +15,15 @@ class TopicService:
         for topic in topics:
             self.db.add(PaperTopic(paper_id=paper.id,topic_id=topic.id))
         self.db.commit()
+    def list_topics(self):
+        return (
+            self.db.query(Topic)
+            .order_by(Topic.name)
+            .all()
+        )
+    def get_topic_by_slug(self, slug: str):
+        return (
+            self.db.query(Topic)
+            .filter(Topic.slug == slug)
+            .first()
+        )
