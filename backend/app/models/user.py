@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.bookmark import Bookmark
+    from app.models.note import Note
 class User(Base):
     __tablename__="users"
     
@@ -17,3 +18,7 @@ class User(Base):
     created_at: Mapped[datetime.datetime]=mapped_column(DateTime(timezone=True),server_default=func.now())
     bookmarks:Mapped[list["Bookmark"]]=relationship(back_populates="user",cascade="all,delete-orphan")
     collections = relationship("Collection",back_populates="user",cascade="all, delete-orphan",)
+    notes: Mapped[list["Note"]] = relationship(
+    back_populates="user",
+    cascade="all, delete-orphan",
+)

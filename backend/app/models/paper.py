@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.models.bookmark import Bookmark
     from app.models.paper_topic import PaperTopic
     from app.models.topic import Topic
+    from app.models.note import Note
 class Paper(Base):
     __tablename__="papers"
     __table_args__ = (
@@ -32,3 +33,6 @@ class Paper(Base):
     topics: Mapped[list["Topic"]] = relationship("Topic",
     secondary="paper_topics",
     viewonly=True,)
+    notes: Mapped[list["Note"]] = relationship(
+    back_populates="paper",
+    cascade="all, delete-orphan",)
