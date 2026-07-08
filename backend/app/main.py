@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.routes import auth,bookmark_route,user_route,paper_route,collection_paper_route,collection_route,topic
 from app.routes.ingestion import router as ingestion_router
+from app.routes.note_route import router as note_router
 
 app=FastAPI()
 @app.get("/")
@@ -17,6 +18,7 @@ app.include_router(collection_route.router)
 app.include_router(collection_paper_route.router)
 app.include_router(ingestion_router)
 app.include_router(topic.router)
+app.include_router(note_router)
 
 
 
