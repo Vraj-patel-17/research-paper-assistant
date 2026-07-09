@@ -36,3 +36,8 @@ class Paper(Base):
     notes: Mapped[list["Note"]] = relationship(
     back_populates="paper",
     cascade="all, delete-orphan",)
+    summary = relationship(
+    "Summary",
+    back_populates="paper",
+    uselist=False,
+    cascade="all, delete-orphan",)
