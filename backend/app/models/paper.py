@@ -41,3 +41,8 @@ class Paper(Base):
     back_populates="paper",
     uselist=False,
     cascade="all, delete-orphan",)
+    content = relationship(
+    "PaperContent",
+    back_populates="paper",
+    uselist=False,
+    cascade="all, delete-orphan",)
