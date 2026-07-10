@@ -8,4 +8,4 @@ bcrypt
 feedparser
 httpx
 google-genai
-docling
+pymupdf

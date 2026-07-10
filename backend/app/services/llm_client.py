@@ -13,7 +13,7 @@ class LLMClient:
         self.client = genai.Client(api_key=api_key)
         self.model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
-    def generate(self, prompt: str) -> str:
+    def generate_text(self, prompt: str) -> str:
         response = self.client.models.generate_content(
             model=self.model,
             contents=prompt,

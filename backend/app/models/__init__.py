@@ -6,3 +6,5 @@ from .collection_paper import CollectionPaper
 from .topic import Topic
 from .paper_topic import PaperTopic
 from .note import Note
+from .summary import Summary
+from .paper_content import PaperContent
