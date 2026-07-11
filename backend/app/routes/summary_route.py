@@ -5,7 +5,8 @@ from app.database import get_db
 from app.schemas.summary import SummaryResponse
 from app.services.paper_services import get_paper_by_id
 from app.services.summary_services import summary_service
-
+from app.exceptions.llm_exceptions import LLMGenerationError
+from app.exceptions.pdf_exceptions import PDFDownloadError,EmptyPDFError
 router = APIRouter(
     prefix="/papers",
     tags=["Summaries"],
@@ -29,10 +30,28 @@ def get_summary(
             status_code=404,
             detail="Paper not found.",
         )
+    try:
+        summary = summary_service.get_or_create_summary(
+            db=db,
+            paper=paper,
+        )
+        return summary
+    except PDFDownloadError:
+        raise HTTPException(
+            status_code=502,
+            detail="Failed to download paper PDF.",
+        )
 
-    summary = summary_service.get_or_create_summary(
-        db=db,
-        paper=paper,
-    )
+    except EmptyPDFError:
+        raise HTTPException(
+            status_code=400,
+            detail="Paper contains no extractable text.",
+        )
 
-    return summary
+    except LLMGenerationError:
+        raise HTTPException(
+            status_code=503,
+            detail="Summary generation failed.",
+        )
+
+   

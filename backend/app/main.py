@@ -3,8 +3,8 @@ from app.routes import auth,bookmark_route,user_route,paper_route,collection_pap
 from app.routes.ingestion import router as ingestion_router
 from app.routes.note_route import router as note_router
 from app.routes.summary_route import router as summary_router
-
-
+from app.core.logging import setup_logging
+setup_logging()
 app=FastAPI()
 @app.get("/")
 async def root():
