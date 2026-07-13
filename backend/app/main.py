@@ -5,6 +5,7 @@ from app.routes.note_route import router as note_router
 from app.routes.summary_route import router as summary_router
 from app.core.logging import setup_logging
 from app.routes import recommendation_route
+from app.routes import chat_routes
 
 setup_logging()
 app=FastAPI()
@@ -25,6 +26,7 @@ app.include_router(topic.router)
 app.include_router(note_router)
 app.include_router(summary_router)
 app.include_router(recommendation_route.router)
+app.include_router(chat_routes.router)
 
 
 
