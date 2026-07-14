@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-
+from app.services.chunk_services import ChunkService
 
 @dataclass
 class RetrievedChunk:
@@ -22,58 +22,11 @@ STOP_WORDS = {
 }
 class RetrievalService:
 
-    def __init__(
-        self,
-        chunk_size: int = 250,
-        chunk_overlap: int = 50,
-    ):
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+    def __init__(self):
+        self.chunk_service=ChunkService()
 
-    def chunk_text(
-        self,
-        text: str,
-    ) -> list[str]:
-        paragraphs = [
-            p.strip()
-            for p in re.split(r"\n\s*\n", text)
-            if p.strip()
-        ]
-        chunks = []
-        current_words = []
-
-        for paragraph in paragraphs:
-            paragraph_words = paragraph.split()
-            if len(paragraph_words) > self.chunk_size:
-
-                if current_words:
-                    chunks.append(" ".join(current_words))
-                    current_words = []
-
-                start = 0
-
-                while start < len(paragraph_words):
-                    end = start + self.chunk_size
-                    chunks.append(
-                        " ".join(paragraph_words[start:end])
-                    )
-                    start += self.chunk_size - self.chunk_overlap
-
-                continue
-
-            # Paragraph fits
-            if len(current_words) + len(paragraph_words) <= self.chunk_size:
-                current_words.extend(paragraph_words)
-            else:
-                chunks.append(" ".join(current_words))
-                overlap = current_words[-self.chunk_overlap :] if current_words else []
-                current_words = overlap + paragraph_words
-
-        if current_words:
-            chunks.append(" ".join(current_words))
-
-        return chunks
-
+    
+    
     def tokenize(
         self,
         text: str,
@@ -87,14 +40,14 @@ class RetrievalService:
         question: str,
         top_k: int = 5,
     ) -> list[RetrievedChunk]:
-        chunks = self.chunk_text(paper_content)
+        chunks = self.chunk_service.chunk_text(paper_content)
         question_token_list = self.tokenize_list(question)
         question_tokens = set(question_token_list)
         phrase = " ".join(question_token_list)
         retrieved_chunks = []
-        for index, chunk in enumerate(chunks):
-            chunk_tokens = self.tokenize(chunk)
-            chunk_lower=chunk.lower()
+        for chunk in chunks:
+            chunk_tokens = self.tokenize(chunk.content)
+            chunk_lower=chunk.content.lower()
             question_lower=question.lower()
             score = len(question_tokens & chunk_tokens)*2
             for token in question_tokens:
@@ -105,8 +58,8 @@ class RetrievalService:
                 continue
             retrieved_chunks.append(
                 RetrievedChunk(
-                    chunk_index=index,
-                    content=chunk,
+                    chunk_index=chunk.index,
+                    content=chunk.content,
                     score=score,
                 )
             )

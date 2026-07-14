@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 sqlalchemy 
-psycoppg2-binary
+psycopg2-binary
 python-dotenv
 passlib
 bcrypt
@@ -9,3 +9,4 @@ feedparser
 httpx
 google-genai
 pymupdf
+rank-bm25
