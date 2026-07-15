@@ -1,12 +1,12 @@
 import re
 from dataclasses import dataclass
 from app.services.chunk_services import ChunkService
-
+from rank_bm25 import BM25Okapi
 @dataclass
 class RetrievedChunk:
     chunk_index: int
     content: str
-    score: int
+    score: float
 
 STOP_WORDS = {
     "a", "an", "and", "are", "as", "at",
@@ -30,7 +30,7 @@ class RetrievalService:
     def tokenize(
         self,
         text: str,
-    ) -> set[str]:
+    ) -> list[str]:
         tokens=re.findall(r"\b[a-zA-Z0-9]+\b",text.lower())
         return [ token for token in tokens if token not in STOP_WORDS and len(token)>2]
 
@@ -41,26 +41,21 @@ class RetrievalService:
         top_k: int = 5,
     ) -> list[RetrievedChunk]:
         chunks = self.chunk_service.chunk_text(paper_content)
-        question_token_list = self.tokenize_list(question)
-        question_tokens = set(question_token_list)
-        phrase = " ".join(question_token_list)
+        if not chunks:
+            return []
+        tokenized_chunks=[self.tokenize(chunk.content) for chunk in chunks]
+        bm25=BM25Okapi(tokenized_chunks)
+        question_tokens=self.tokenize(question)
+        scores=bm25.get_scores(question_tokens)
         retrieved_chunks = []
-        for chunk in chunks:
-            chunk_tokens = self.tokenize(chunk.content)
-            chunk_lower=chunk.content.lower()
-            question_lower=question.lower()
-            score = len(question_tokens & chunk_tokens)*2
-            for token in question_tokens:
-                score+=chunk_lower.count(token)
-            if phrase and phrase in chunk_lower:
-                score += 5
-            if score == 0:
+        for chunk,score in zip(chunks,scores):
+            if score<=0:
                 continue
             retrieved_chunks.append(
                 RetrievedChunk(
                     chunk_index=chunk.index,
                     content=chunk.content,
-                    score=score,
+                    score=float(score),
                 )
             )
 
