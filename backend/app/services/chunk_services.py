@@ -5,9 +5,12 @@ import re
 class Chunk:
     index: int
     content: str
+    section : str | None=None
 
 class ChunkService:
-
+    SECTION_PATTERN = re.compile(
+        r"^(\d+(\.\d+)*)?\s*[A-Z][A-Za-z0-9\s\-/:]{2,80}$"
+    )
     def __init__(
         self,
         chunk_size: int = 250,
@@ -15,6 +18,14 @@ class ChunkService:
     ):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
+    
+    def is_heading(self,text:str)->bool:
+        text=text.split()
+        if len(text.split()) > 10:
+            return False
+        if text.endswith("."):
+            return False
+        return bool(self.SECTION_PATTERN.match(text))
 
     def chunk_text(
         self,
@@ -26,10 +37,13 @@ class ChunkService:
         current_words = []
         chunk_index = 0
         for paragraph in paragraphs:
+            if self.is_heading(paragraph):
+                current_section = paragraph
+                continue
             paragraph_words = paragraph.split()
             if len(paragraph_words) > self.chunk_size:
                 if current_words:
-                    chunks.append(Chunk(index=chunk_index,content=" ".join(current_words),))
+                    chunks.append(Chunk(index=chunk_index,content=" ".join(current_words),section=current_section))
                     chunk_index += 1
                     current_words = []
                 start = 0
@@ -40,7 +54,7 @@ class ChunkService:
                             index=chunk_index,
                             content=" ".join(
                                 paragraph_words[start:end]
-                            ),
+                            ),section=current_section
                         )
                     )
                     chunk_index += 1
@@ -57,7 +71,7 @@ class ChunkService:
             else:
                 chunks.append(Chunk(
                         index=chunk_index,
-                        content=" ".join(current_words),))
+                        content=" ".join(current_words),section=current_section))
 
                 chunk_index += 1
                 overlap = (
@@ -71,7 +85,7 @@ class ChunkService:
             chunks.append(
                 Chunk(
                     index=chunk_index,
-                    content=" ".join(current_words),
+                    content=" ".join(current_words),section=current_section
                 )
             )
 

@@ -6,6 +6,7 @@ from rank_bm25 import BM25Okapi
 class RetrievedChunk:
     chunk_index: int
     content: str
+    section: str | None
     score: float
 
 STOP_WORDS = {
@@ -55,6 +56,7 @@ class RetrievalService:
                 RetrievedChunk(
                     chunk_index=chunk.index,
                     content=chunk.content,
+                    section=chunk.section,
                     score=float(score),
                 )
             )
