@@ -5,6 +5,7 @@ from app.services.retrieval_services import RetrievalService
 from app.prompts.summary_prompt import build_chat_prompt
 from app.services.llm_client import LLMClient
 from app.schemas.chat import ChatResponse, SourceReference
+from app.services.paper_services import get_paper_by_id
 class ChatService:
 
     def __init__(self, db: Session):
@@ -15,8 +16,9 @@ class ChatService:
         self.llm_client = LLMClient()
 
     def chat(self,paper_id:int,question:str)->ChatResponse:
-        paper_content = self.paper_content_service.get_by_paper_id(self.db,paper_id)
-        chunks=self.retrieval_service.retrieve(paper_content.content,question)
+        paper = get_paper_by_id(self.db,paper_id=paper_id)
+        content=self.paper_content_service.get_or_create_content(db=self.db,paper=paper)
+        chunks=self.retrieval_service.retrieve(content,question)
         context="\n\n".join(chunk.content for chunk in chunks)
         prompt=build_chat_prompt(question=question,context=context)
         answer=self.llm_client.generate_text(prompt=prompt)

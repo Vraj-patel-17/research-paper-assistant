@@ -20,8 +20,8 @@ class ChunkService:
         self.chunk_overlap = chunk_overlap
     
     def is_heading(self,text:str)->bool:
-        text=text.split()
-        if len(text.split()) > 10:
+        words=text.split()
+        if len(words) > 10:
             return False
         if text.endswith("."):
             return False
@@ -36,6 +36,7 @@ class ChunkService:
         chunks = []
         current_words = []
         chunk_index = 0
+        current_section=None
         for paragraph in paragraphs:
             if self.is_heading(paragraph):
                 current_section = paragraph

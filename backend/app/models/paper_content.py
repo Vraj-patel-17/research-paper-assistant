@@ -45,3 +45,8 @@ class PaperContent(Base):
     paper: Mapped["Paper"] = relationship(
         back_populates="content",
     )
+    chunks = relationship(
+    "PaperChunk",
+    back_populates="paper_content",
+    cascade="all, delete-orphan",
+    passive_deletes=True,)

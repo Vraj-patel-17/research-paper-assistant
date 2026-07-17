@@ -1,12 +1,11 @@
 import re
 from dataclasses import dataclass
-from app.services.chunk_services import ChunkService
+from app.models.paper_content import PaperContent
 from rank_bm25 import BM25Okapi
 @dataclass
 class RetrievedChunk:
     chunk_index: int
     content: str
-    section: str | None
     score: float
 
 STOP_WORDS = {
@@ -22,12 +21,7 @@ STOP_WORDS = {
     "could", "should", "would",
 }
 class RetrievalService:
-
-    def __init__(self):
-        self.chunk_service=ChunkService()
-
-    
-    
+       
     def tokenize(
         self,
         text: str,
@@ -37,14 +31,14 @@ class RetrievalService:
 
     def retrieve(
         self,
-        paper_content: str,
+        paper_content: PaperContent,
         question: str,
         top_k: int = 5,
     ) -> list[RetrievedChunk]:
-        chunks = self.chunk_service.chunk_text(paper_content)
+        chunks = paper_content.chunks
         if not chunks:
             return []
-        tokenized_chunks=[self.tokenize(chunk.content) for chunk in chunks]
+        tokenized_chunks=[self.tokenize(chunk.text) for chunk in chunks]
         bm25=BM25Okapi(tokenized_chunks)
         question_tokens=self.tokenize(question)
         scores=bm25.get_scores(question_tokens)
@@ -54,9 +48,8 @@ class RetrievalService:
                 continue
             retrieved_chunks.append(
                 RetrievedChunk(
-                    chunk_index=chunk.index,
-                    content=chunk.content,
-                    section=chunk.section,
+                    chunk_index=chunk.chunk_index,
+                    content=chunk.text,
                     score=float(score),
                 )
             )
