@@ -19,7 +19,13 @@ class ChatService:
         paper = get_paper_by_id(self.db,paper_id=paper_id)
         content=self.paper_content_service.get_or_create_content(db=self.db,paper=paper)
         chunks=self.retrieval_service.retrieve(content,question)
+        if not chunks:
+            return ChatResponse(answer="I couldn't find the answer in the provided paper",sources=[])
+        print([chunk.chunk_index for chunk in chunks])
         context="\n\n".join(chunk.content for chunk in chunks)
         prompt=build_chat_prompt(question=question,context=context)
+        print("----- CONTEXT START -----")
+        print(context)
+        print("----- CONTEXT END -----")
         answer=self.llm_client.generate_text(prompt=prompt)
         return ChatResponse(answer=answer,sources=[SourceReference(chunk_index=chunk.chunk_index,) for chunk in chunks],)

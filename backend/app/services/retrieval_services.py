@@ -58,5 +58,5 @@ class RetrievalService:
             key=lambda chunk: chunk.score,
             reverse=True,
         )
-
+        print(f"Retrieved {len(retrieved_chunks)} chunks")
         return retrieved_chunks[:top_k]

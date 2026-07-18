@@ -38,9 +38,17 @@ class ChunkService:
         chunk_index = 0
         current_section=None
         for paragraph in paragraphs:
-            if self.is_heading(paragraph):
-                current_section = paragraph
-                continue
+            lines=paragraph.splitlines()
+            first_line=lines[0].strip()
+            if self.is_heading(first_line):
+                if current_words:
+                    chunks.append(Chunk(index=chunk_index,content=" ".join(current_words),section=current_section))
+                    chunk_index+=1
+                    current_words=[]
+                current_section = first_line
+                paragraph="\n".join(lines[1:]).strip()
+                if not paragraph:
+                    continue
             paragraph_words = paragraph.split()
             if len(paragraph_words) > self.chunk_size:
                 if current_words:

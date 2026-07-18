@@ -43,22 +43,29 @@ class PaperContentService:
     self,
     db: Session,
     paper_content: PaperContent,) -> None:
-
+        existing_chunks = (
+    db.query(PaperChunk)
+    .filter(PaperChunk.paper_content_id == paper_content.id)
+    .first()
+)
+        if existing_chunks:
+            return
         chunks = self.chunk_service.chunk_text(
             paper_content.content,
         )
-
         chunk_objects = [
             PaperChunk(
                 paper_content_id=paper_content.id,
                 chunk_index=chunk.index,
                 text=chunk.content,
+                section=chunk.section
             )
             for  chunk in chunks
         ]
 
         db.add_all(chunk_objects)
         db.commit()
+
     def get_or_create_content(
         self,
         db: Session,
