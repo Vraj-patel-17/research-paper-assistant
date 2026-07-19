@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, ForeignKey, Integer, Text, func
+from sqlalchemy import DateTime, ForeignKey, Integer, Text, func,UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -7,7 +7,7 @@ from app.database import Base
 
 class PaperChunk(Base):
     __tablename__ = "paper_chunks"
-
+    __table_args__=(UniqueConstraint("paper_content_id","chunk_index",name="uq_paper_content_chunk_index"),)
     id: Mapped[int] = mapped_column(primary_key=True)
 
     paper_content_id: Mapped[int] = mapped_column(

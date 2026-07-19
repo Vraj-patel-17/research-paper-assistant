@@ -49,4 +49,4 @@ class PaperContent(Base):
     "PaperChunk",
     back_populates="paper_content",
     cascade="all, delete-orphan",
-    passive_deletes=True,)
+    passive_deletes=True,order_by="PaperChunk.chunk_index")
