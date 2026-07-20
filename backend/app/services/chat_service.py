@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.services.paper_content_service import PaperContentService
-from app.services.retrieval_services import RetrievalService
+from app.services.retrieval.retrieval_services import RetrievalService
 from app.prompts.summary_prompt import build_chat_prompt
 from app.services.llm_client import LLMClient
 from app.schemas.chat import ChatResponse, SourceReference
