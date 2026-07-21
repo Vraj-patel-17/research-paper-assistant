@@ -13,7 +13,7 @@ class Settings:
         "GEMINI_MODEL",
         "gemini-2.5-flash",
     )
-
+    GEMINI_EMBEDDING_MODEL: str = "gemini-embedding-001"
     PDF_TIMEOUT: int = int(
         os.getenv("PDF_TIMEOUT", "30")
     )

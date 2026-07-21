@@ -10,3 +10,4 @@ httpx
 google-genai
 pymupdf
 rank-bm25
+pgvector

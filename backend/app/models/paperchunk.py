@@ -1,7 +1,7 @@
 from sqlalchemy import DateTime, ForeignKey, Integer, Text, func,UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from pgvector.sqlalchemy import Vector 
 from app.database import Base
 
 
@@ -27,6 +27,7 @@ class PaperChunk(Base):
         Text,
         nullable=True,
     )
+    embedding = mapped_column(Vector(768), nullable=True)
     created_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
