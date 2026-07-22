@@ -27,7 +27,7 @@ class PaperChunk(Base):
         Text,
         nullable=True,
     )
-    embedding = mapped_column(Vector(768), nullable=True)
+    embedding = mapped_column(Vector(3072), nullable=True)
     created_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

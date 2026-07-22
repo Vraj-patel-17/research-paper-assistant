@@ -5,11 +5,11 @@ from app.models.paper_content import PaperContent
 from app.models.paperchunk import PaperChunk
 from app.services.pdf_service import pdf_service
 from app.services.chunk_services import ChunkService
-
+from app.services.embeddings.embedding_service import EmbeddingService
 class PaperContentService:
     def __init__(self):
         self.chunk_service = ChunkService()
-
+        self.embedding_service = EmbeddingService()
     def get_by_paper_id(
         self,
         db: Session,
@@ -53,17 +53,18 @@ class PaperContentService:
         chunks = self.chunk_service.chunk_text(
             paper_content.content,
         )
-        chunk_objects = [
-            PaperChunk(
+        paper_chunks = []
+        for chunk in chunks:
+            embedding=self.embedding_service.generate_embedding(chunk.content)
+            paper_chunks.append(PaperChunk(
                 paper_content_id=paper_content.id,
                 chunk_index=chunk.index,
                 text=chunk.content,
-                section=chunk.section
-            )
-            for  chunk in chunks
-        ]
+                section=chunk.section,
+                embedding=embedding
+            ))
 
-        db.add_all(chunk_objects)
+        db.add_all(paper_chunks)
         db.commit()
 
     def get_or_create_content(
