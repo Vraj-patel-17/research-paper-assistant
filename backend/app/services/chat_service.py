@@ -18,7 +18,7 @@ class ChatService:
     def chat(self,paper_id:int,question:str)->ChatResponse:
         paper = get_paper_by_id(self.db,paper_id=paper_id)
         content=self.paper_content_service.get_or_create_content(db=self.db,paper=paper)
-        chunks=self.retrieval_service.retrieve(content,question)
+        chunks=self.retrieval_service.retrieve(db=self.db,paper_content=content,question=question)
         if not chunks:
             return ChatResponse(answer="I couldn't find the answer in the provided paper",sources=[])
         context=self.retrieval_service.build_context(chunks)

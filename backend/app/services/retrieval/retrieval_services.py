@@ -2,9 +2,10 @@ import re
 from dataclasses import dataclass
 from app.models.paper_content import PaperContent
 from rank_bm25 import BM25Okapi
+from sqlalchemy.orm import Session
 from app.models.paperchunk import PaperChunk 
 from app.schemas.retrieval import RetrievedChunk
-from app.services.retrieval.bm25_retriever import BM25Retriever
+from app.services.retrieval.hybrid_retriver import HybridRetriever
 STOP_WORDS = {
     "a", "an", "and", "are", "as", "at",
     "be", "by", "for", "from",
@@ -19,14 +20,15 @@ STOP_WORDS = {
 }
 class RetrievalService:
     def __init__(self):
-        self.retriever=BM25Retriever()
+        self.retriever=HybridRetriever()
     def retrieve(
         self,
+        db:Session,
         paper_content: PaperContent,
         question: str,
         top_k: int = 5,
     ) -> list[RetrievedChunk]:
-        return self.retriever.retrieve(question=question, paper_content=paper_content, top_k=top_k)
+        return self.retriever.retrieve(db=db,paper_content=paper_content,question=question,top_k=top_k)
     
     def build_context(self,chunks: list[RetrievedChunk],) -> str:
         context = []

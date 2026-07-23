@@ -63,7 +63,6 @@ class PaperContentService:
                 section=chunk.section,
                 embedding=embedding
             ))
-
         db.add_all(paper_chunks)
         db.commit()
 
