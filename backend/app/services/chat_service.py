@@ -24,4 +24,4 @@ class ChatService:
         context=self.retrieval_service.build_context(chunks)
         prompt=build_chat_prompt(question=question,context=context)
         answer=self.llm_client.generate_text(prompt=prompt)
-        return ChatResponse(answer=answer,sources=[SourceReference(chunk_id=chunk.chunk_id,chunk_index=chunk.chunk_index,) for chunk in chunks],)
+        return ChatResponse(answer=answer,sources=[SourceReference(chunk_id=chunk.chunk_id,chunk_index=chunk.chunk_index,section=chunk.section) for chunk in chunks],)

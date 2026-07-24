@@ -44,16 +44,34 @@ class HybridRetriever:
     top_k: int,
 ) -> list[RetrievedChunk]:
 
-        merged: dict[int, RetrievedChunk] = {}
+        K = 60
 
-        for chunk in bm25_results + vector_results:
-            existing = merged.get(chunk.chunk_id)
+        fused_scores: dict[int, float] = {}
+        chunks: dict[int, RetrievedChunk] = {}
 
-            if existing is None or chunk.score > existing.score:
-                merged[chunk.chunk_id] = chunk
+        # BM25 contribution
+        for rank, chunk in enumerate(bm25_results, start=1):
+            fused_scores[chunk.chunk_id] = (
+                fused_scores.get(chunk.chunk_id, 0.0)
+                + 1 / (K + rank)
+            )
+            chunks[chunk.chunk_id] = chunk
 
-        return sorted(
-            merged.values(),
-            key=lambda chunk: chunk.score,
+        # Vector contribution
+        for rank, chunk in enumerate(vector_results, start=1):
+            fused_scores[chunk.chunk_id] = (
+                fused_scores.get(chunk.chunk_id, 0.0)
+                + 1 / (K + rank)
+            )
+            chunks[chunk.chunk_id] = chunk
+
+        ranked = sorted(
+            fused_scores.items(),
+            key=lambda item: item[1],
             reverse=True,
-        )[:top_k]
+        )
+
+        return [
+            chunks[chunk_id]
+            for chunk_id, _ in ranked[:top_k]
+        ]

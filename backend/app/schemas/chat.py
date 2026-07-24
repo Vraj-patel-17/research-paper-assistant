@@ -5,6 +5,8 @@ class ChatRequest(BaseModel):
 
 class SourceReference(BaseModel):
     chunk_index: int
+    chunk_id :int
+    section :str | None=None
 
 class ChatResponse(BaseModel):
     answer: str

@@ -4,6 +4,7 @@ from rank_bm25 import BM25Okapi
 from app.models.paper_content import PaperContent
 from app.schemas.retrieval import RetrievedChunk
 import re
+from app.services.retrieval.retrieval_utils import RetrievalUtils
 STOP_WORDS = {
     "a", "an", "and", "are", "as", "at",
     "be", "by", "for", "from",
@@ -35,6 +36,8 @@ class BM25Retriever(BaseRetriever):
         preferred_sections=self.get_preferred_sections(question)
         retrieved_chunks = []
         for chunk,score in zip(chunks,scores):
+            if not RetrievalUtils.is_valid_chunk(chunk.text,chunk.section):
+                continue
             if (preferred_sections and chunk.section and chunk.section.lower() in preferred_sections):
                 score*=1.5
             if score<threshold:
