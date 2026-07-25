@@ -6,7 +6,8 @@ from app.models.summary import Summary
 from app.services.paper_content_service import paper_content_service
 from app.services.llm_client import LLMClient
 from app.prompts.summary_prompt import build_summary_prompt
-
+import logging
+logger = logging.getLogger(__name__)
 class SummaryService:
 
     def get_by_paper_id(
@@ -84,25 +85,28 @@ class SummaryService:
         )
 
         if summary:
+            logger.debug("Using cached summary for paper %s", paper.id)
             return summary
 
         content = paper_content_service.get_or_create_content(
             db=db,
             paper=paper,
         )
-
+        logger.info("Preparing content for summary generation for paper %s",paper.id,)
         llm = LLMClient()
 
         prompt = build_summary_prompt(title=paper.title,full_text=content)
-
+        logger.info("Generating summary for paper %s", paper.id)
         generated_summary = llm.generate_text(prompt)
 
-        return self.create(
+        summary=self.create(
             db=db,
             paper_id=paper.id,
             summary_type=summary_type,
             model_name=llm.model,
             content=generated_summary,
         )
+        logger.info("Summary created for paper %s",paper.id,)
+        return summary
 
 summary_service = SummaryService()

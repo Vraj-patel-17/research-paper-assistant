@@ -3,7 +3,8 @@ from app.services.retrieval.vector_retriever import VectorRetriever
 from app.schemas.retrieval import RetrievedChunk
 from app.models.paper_content import PaperContent
 from sqlalchemy.orm import Session
-
+import logging
+logger = logging.getLogger(__name__)
 
 class HybridRetriever:
 
@@ -18,7 +19,7 @@ class HybridRetriever:
         question: str,
         top_k: int = 5,
     ) -> list[RetrievedChunk]:
-
+        logger.debug("Starting hybrid retrieval")
         bm25_results = self.bm25.retrieve(
             paper_content=paper_content,
             question=question,
@@ -30,6 +31,7 @@ class HybridRetriever:
             question=question,
             top_k=top_k,
         )
+        logger.debug("BM25 returned %d chunks, Vector returned %d chunks",len(bm25_results),len(vector_results))
         results=self.merge_results(
             bm25_results,
             vector_results,

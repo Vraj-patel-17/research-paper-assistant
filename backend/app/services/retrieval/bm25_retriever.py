@@ -5,6 +5,8 @@ from app.models.paper_content import PaperContent
 from app.schemas.retrieval import RetrievedChunk
 import re
 from app.services.retrieval.retrieval_utils import RetrievalUtils
+import logging
+logger = logging.getLogger(__name__)
 STOP_WORDS = {
     "a", "an", "and", "are", "as", "at",
     "be", "by", "for", "from",
@@ -24,13 +26,16 @@ class BM25Retriever(BaseRetriever):
         question: str,
         top_k: int = 5,
     ) -> list[RetrievedChunk]:
+        logger.debug("Running BM25 retrieval")
         chunks = paper_content.chunks
         if not chunks:
+            logger.debug("No chunks available for BM25 retrieval")
             return []
         tokenized_chunks=[self.tokenize(chunk.text) for chunk in chunks]
         bm25=BM25Okapi(tokenized_chunks)
         question_tokens=self.tokenize(question)
         scores=bm25.get_scores(question_tokens)
+        logger.debug("BM25 scored %d chunks",len(scores))
         max_score = max(scores) if len(scores) > 0 else 0
         threshold = max_score * 0.2
         preferred_sections=self.get_preferred_sections(question)
@@ -58,6 +63,7 @@ class BM25Retriever(BaseRetriever):
         )
         top_chunks=retrieved_chunks[:top_k]
         expanded_chunks=self.expand_neighbors(chunks,top_chunks)
+        logger.debug("BM25 retrieval returned %d chunks",len(expanded_chunks))
         return expanded_chunks
     def tokenize(
         self,

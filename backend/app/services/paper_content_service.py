@@ -6,6 +6,8 @@ from app.models.paperchunk import PaperChunk
 from app.services.pdf_service import pdf_service
 from app.services.chunk_services import ChunkService
 from app.services.embeddings.embedding_service import EmbeddingService
+import logging
+logger = logging.getLogger(__name__)
 class PaperContentService:
     def __init__(self):
         self.chunk_service = ChunkService()
@@ -49,10 +51,12 @@ class PaperContentService:
     .first()
 )
         if existing_chunks:
+            logger.debug("Chunks already exist for paper_content_id=%s",paper_content.id,)
             return
         chunks = self.chunk_service.chunk_text(
             paper_content.content,
         )
+        logger.info("Created %d chunks for paper_content_id=%s",len(chunks),paper_content.id,)
         paper_chunks = []
         for chunk in chunks:
             embedding=self.embedding_service.generate_embedding(chunk.content)
@@ -65,6 +69,7 @@ class PaperContentService:
             ))
         db.add_all(paper_chunks)
         db.commit()
+        logger.info("Stored %d chunks for paper_content_id=%s",len(paper_chunks),paper_content.id,)
 
     def get_or_create_content(
         self,
@@ -77,15 +82,17 @@ class PaperContentService:
             paper_id=paper.id,
         )
         if paper_content:
+            logger.debug("Using cached content for paper_id=%s",paper.id,)
             return paper_content
-
+        logger.info("Extracting PDF content for paper_id=%s",paper.id,)
         content = pdf_service.extract_from_url(
             paper.pdf_url,
         )
+        logger.info("Successfully extracted PDF for paper_id=%s",paper.id,)
         content = content.replace("\x00", "")
         paper_content=self.create(db=db,paper_id=paper.id,content=content)
         self.create_chunks(db=db,paper_content=paper_content)
-        
+        logger.info("Paper content prepared for paper_id=%s",paper.id,)
         return paper_content
 
 

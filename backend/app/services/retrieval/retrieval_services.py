@@ -7,6 +7,8 @@ from app.models.paperchunk import PaperChunk
 from app.schemas.retrieval import RetrievedChunk,RetrievalDebugResponse,RetrievedChunkResponse
 from app.services.retrieval.hybrid_retriver import HybridRetriever
 from app.services.paper_content_service import PaperContentService
+import logging
+logger = logging.getLogger(__name__)
 STOP_WORDS = {
     "a", "an", "and", "are", "as", "at",
     "be", "by", "for", "from",
@@ -29,7 +31,10 @@ class RetrievalService:
         question: str,
         top_k: int = 5,
     ) -> list[RetrievedChunk]:
-        return self.retriever.retrieve(db=db,paper_content=paper_content,question=question,top_k=top_k)
+        logger.debug("Starting hybrid retrieval")
+        chunks= self.retriever.retrieve(db=db,paper_content=paper_content,question=question,top_k=top_k)
+        logger.debug("Hybrid retrieval returned %d chunks",len(chunks))
+        return chunks
     
     def build_context(self,chunks: list[RetrievedChunk],) -> str:
         context = []
@@ -39,6 +44,7 @@ class RetrievalService:
                 context.append(f"## {chunk.section}")
                 current_section = chunk.section
             context.append(chunk.content)
+        logger.debug("Built context from %d chunks",len(chunks))
         return "\n\n".join(context)
 
     def retrieve_chunks(
@@ -61,7 +67,7 @@ class RetrievalService:
     paper_id: int,
     question: str,
 ) -> RetrievalDebugResponse:
-
+        logger.info("Searching chunks for paper %s",paper_id)
         paper = PaperContentService.get_paper_by_id(
             self.db,
             paper_id,
@@ -77,7 +83,7 @@ class RetrievalService:
             paper_content=content,
             question=question,
         )
-
+        logger.debug("Returning %d retrieved chunks",len(chunks))
         return RetrievalDebugResponse(
             chunks=[
                 RetrievedChunkResponse(

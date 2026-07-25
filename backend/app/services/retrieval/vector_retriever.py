@@ -6,7 +6,8 @@ from app.schemas.retrieval import RetrievedChunk
 from app.services.embeddings.embedding_service import EmbeddingService
 from app.services.retrieval.base import BaseRetriever
 from app.services.retrieval.retrieval_utils import RetrievalUtils
-
+import logging
+logger = logging.getLogger(__name__)
 
 class VectorRetriever(BaseRetriever):
 
@@ -22,9 +23,9 @@ class VectorRetriever(BaseRetriever):
     ) -> list[RetrievedChunk]:
 
         question_embedding = self.embedding_service.generate_embedding(question)
-
+        logger.debug("Generated question embedding for vector retrieval")
         distance = PaperChunk.embedding.cosine_distance(question_embedding)
-
+        logger.debug("Performing vector search for paper_content_id=%s",paper_content.id)
         rows = (
             db.query(
                 PaperChunk,
@@ -57,5 +58,5 @@ class VectorRetriever(BaseRetriever):
                     score=1 - float(distance),
                 )
             )
-
+        logger.debug("Vector retrieval returned %d chunks",len(retrieved_chunks))
         return retrieved_chunks

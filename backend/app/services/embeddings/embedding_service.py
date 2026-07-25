@@ -1,6 +1,7 @@
 from app.services.base_client import GeminiClient
 from app.core.config import settings
-
+import logging
+logger = logging.getLogger(__name__)
 class EmbeddingService(GeminiClient):
     def __init__(self):
         super().__init__()
