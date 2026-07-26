@@ -45,55 +45,62 @@ class PaperContentService:
     self,
     db: Session,
     paper_content: PaperContent,) -> None:
-        existing_chunks = (
-    db.query(PaperChunk)
-    .filter(PaperChunk.paper_content_id == paper_content.id)
-    .first()
-)
-        if existing_chunks:
-            logger.debug("Chunks already exist for paper_content_id=%s",paper_content.id,)
-            return
-        chunks = self.chunk_service.chunk_text(
-            paper_content.content,
-        )
-        logger.info("Created %d chunks for paper_content_id=%s",len(chunks),paper_content.id,)
-        paper_chunks = []
-        for chunk in chunks:
-            embedding=self.embedding_service.generate_embedding(chunk.content)
-            paper_chunks.append(PaperChunk(
-                paper_content_id=paper_content.id,
-                chunk_index=chunk.index,
-                text=chunk.content,
-                section=chunk.section,
-                embedding=embedding
-            ))
-        db.add_all(paper_chunks)
-        db.commit()
-        logger.info("Stored %d chunks for paper_content_id=%s",len(paper_chunks),paper_content.id,)
+        try:
+            existing_chunks = (
+        db.query(PaperChunk)
+        .filter(PaperChunk.paper_content_id == paper_content.id)
+        .first()
+    )
+            if existing_chunks:
+                logger.debug("Chunks already exist for paper_content_id=%s",paper_content.id,)
+                return
+            chunks = self.chunk_service.chunk_text(
+                paper_content.content,
+            )
+            logger.info("Created %d chunks for paper_content_id=%s",len(chunks),paper_content.id,)
+            paper_chunks = []
+            for chunk in chunks:
+                embedding=self.embedding_service.generate_embedding(chunk.content)
+                paper_chunks.append(PaperChunk(
+                    paper_content_id=paper_content.id,
+                    chunk_index=chunk.index,
+                    text=chunk.content,
+                    section=chunk.section,
+                    embedding=embedding
+                ))
+            db.add_all(paper_chunks)
+            db.commit()
+            logger.info("Stored %d chunks for paper_content_id=%s",len(paper_chunks),paper_content.id,)
+        except Exception:
+            logger.exception("Failed to create chunks for paper_content_id=%s",paper_content.id)
+            raise
 
     def get_or_create_content(
         self,
         db: Session,
         paper: Paper,
     ) -> PaperContent:
-
-        paper_content = self.get_by_paper_id(
-            db=db,
-            paper_id=paper.id,
-        )
-        if paper_content:
-            logger.debug("Using cached content for paper_id=%s",paper.id,)
+        try:
+            paper_content = self.get_by_paper_id(
+                db=db,
+                paper_id=paper.id,
+            )
+            if paper_content:
+                logger.debug("Using cached content for paper_id=%s",paper.id,)
+                return paper_content
+            logger.info("Extracting PDF content for paper_id=%s",paper.id,)
+            content = pdf_service.extract_from_url(
+                paper.pdf_url,
+            )
+            logger.info("Successfully extracted PDF for paper_id=%s",paper.id,)
+            content = content.replace("\x00", "")
+            paper_content=self.create(db=db,paper_id=paper.id,content=content)
+            self.create_chunks(db=db,paper_content=paper_content)
+            logger.info("Paper content prepared for paper_id=%s",paper.id,)
             return paper_content
-        logger.info("Extracting PDF content for paper_id=%s",paper.id,)
-        content = pdf_service.extract_from_url(
-            paper.pdf_url,
-        )
-        logger.info("Successfully extracted PDF for paper_id=%s",paper.id,)
-        content = content.replace("\x00", "")
-        paper_content=self.create(db=db,paper_id=paper.id,content=content)
-        self.create_chunks(db=db,paper_content=paper_content)
-        logger.info("Paper content prepared for paper_id=%s",paper.id,)
-        return paper_content
+        except Exception:
+            logger.exception("Failed to prepare paper content for paper_id=%s",paper.id,)
+            raise
 
 
 paper_content_service = PaperContentService()

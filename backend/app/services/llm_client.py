@@ -12,20 +12,24 @@ class LLMClient(GeminiClient):
         self.model = settings.GEMINI_MODEL
 
     def generate_text(self, prompt: str) -> str:
-        logger.info(
-            "Generating content using model '%s'.",
-            self.model,
-        )
         try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
+            logger.info(
+                "Generating content using model '%s'.",
+                self.model,
             )
-        except Exception as e:
-            logger.exception("LLM generation failed.")
-            raise LLMGenerationError("Failed to generate content using the LLM.") from e
-        if not response.text:
-            logger.error("LLM returned an empty response.")
-            raise LLMGenerationError("The LLM returned an empty response")
-        logger.info("Content generated successfully.")
-        return response.text.strip()
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                )
+            except Exception as e:
+                logger.exception("LLM generation failed.")
+                raise LLMGenerationError("Failed to generate content using the LLM.") from e
+            if not response.text:
+                logger.error("LLM returned an empty response.")
+                raise LLMGenerationError("The LLM returned an empty response")
+            logger.info("Content generated successfully.")
+            return response.text.strip()
+        except Exception:
+            logger.exception("Failed to generate LLM response")
+            raise

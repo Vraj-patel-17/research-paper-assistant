@@ -28,33 +28,37 @@ class PDFService:
         return response.content
 
     def extract_text(self, pdf_bytes: bytes) -> str:
-        logger.info("Extracting text from PDF.")
         try:
-            document = fitz.open(stream=BytesIO(pdf_bytes), filetype="pdf")
-            pages: list[str] = []
+            logger.info("Extracting text from PDF.")
             try:
+                document = fitz.open(stream=BytesIO(pdf_bytes), filetype="pdf")
+                pages: list[str] = []
+                try:
 
-                for page in document:
-                    text = page.get_text().strip()
+                    for page in document:
+                        text = page.get_text().strip()
 
-                    if text:
-                        pages.append(text)
-            finally:
-                document.close()
-        except fitz.FileDataError as e:
-            logger.exception("Failed to extract text from PDF.")
-            raise PDFExtractionError(str(e)) from e
-        text="\n\n".join(pages)
-        if not text.strip():
-            logger.error("PDF contains no extractable text.")
-            raise EmptyPDFError("No extractable text found.")
-        
-        logger.info(
-            "Successfully extracted text from %d pages.",
-            len(pages),
-        )
+                        if text:
+                            pages.append(text)
+                finally:
+                    document.close()
+            except fitz.FileDataError as e:
+                logger.exception("Failed to extract text from PDF.")
+                raise PDFExtractionError(str(e)) from e
+            text="\n\n".join(pages)
+            if not text.strip():
+                logger.error("PDF contains no extractable text.")
+                raise EmptyPDFError("No extractable text found.")
+            
+            logger.info(
+                "Successfully extracted text from %d pages.",
+                len(pages),
+            )
 
-        return text
+            return text
+        except Exception:
+            logger.exception("Failed to extract PDF content")
+            raise
 
     def extract_from_url(self, pdf_url: str) -> str:
         pdf_bytes = self.download_pdf(pdf_url)

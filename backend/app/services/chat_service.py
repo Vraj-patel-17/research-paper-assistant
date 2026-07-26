@@ -18,17 +18,22 @@ class ChatService:
         self.llm_client = LLMClient()
 
     def chat(self,paper_id:int,question:str)->ChatResponse:
-        logger.info("Processing chat request for paper %s", paper_id)
-        paper = get_paper_by_id(self.db,paper_id=paper_id)
-        content=self.paper_content_service.get_or_create_content(db=self.db,paper=paper)
-        
-        chunks=self.retrieval_service.retrieve(db=self.db,paper_content=content,question=question)
-        logger.debug("Retrieved %d chunks", len(chunks))
-        if not chunks:
-            logger.info("No relevant chunks found for paper %s",paper_id,)
-            return ChatResponse(answer="I couldn't find the answer in the provided paper",sources=[])
-        context=self.retrieval_service.build_context(chunks)
-        prompt=build_chat_prompt(question=question,context=context)
-        answer=self.llm_client.generate_text(prompt=prompt)
-        logger.info("Generated chat response for paper %s",paper_id,)
-        return ChatResponse(answer=answer,sources=[SourceReference(chunk_id=chunk.chunk_id,chunk_index=chunk.chunk_index,section=chunk.section) for chunk in chunks],)
+        try:
+            logger.info("Processing chat request for paper %s", paper_id)
+            paper = get_paper_by_id(self.db,paper_id=paper_id)
+            content=self.paper_content_service.get_or_create_content(db=self.db,paper=paper)
+            
+            chunks=self.retrieval_service.retrieve(db=self.db,paper_content=content,question=question)
+            logger.debug("Retrieved %d chunks", len(chunks))
+            if not chunks:
+                logger.info("No relevant chunks found for paper %s",paper_id,)
+                return ChatResponse(answer="I couldn't find the answer in the provided paper",sources=[])
+            context=self.retrieval_service.build_context(chunks)
+            prompt=build_chat_prompt(question=question,context=context)
+            answer=self.llm_client.generate_text(prompt=prompt)
+            logger.info("Generated chat response for paper %s",paper_id,)
+            return ChatResponse(answer=answer,sources=[SourceReference(chunk_id=chunk.chunk_id,chunk_index=chunk.chunk_index,section=chunk.section) for chunk in chunks],)
+        except Exception:
+            logger.exception(
+            "Failed to process chat request for paper %s",paper_id,)
+            raise

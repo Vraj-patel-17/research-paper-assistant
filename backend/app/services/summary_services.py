@@ -77,36 +77,39 @@ class SummaryService:
         paper: Paper,
         summary_type: str = "standard",
     ) -> Summary:
+        try:
+            summary = self.get_by_paper_id(
+                db=db,
+                paper_id=paper.id,
+                summary_type=summary_type,
+            )
 
-        summary = self.get_by_paper_id(
-            db=db,
-            paper_id=paper.id,
-            summary_type=summary_type,
-        )
+            if summary:
+                logger.debug("Using cached summary for paper %s", paper.id)
+                return summary
 
-        if summary:
-            logger.debug("Using cached summary for paper %s", paper.id)
+            content = paper_content_service.get_or_create_content(
+                db=db,
+                paper=paper,
+            )
+            logger.info("Preparing content for summary generation for paper %s",paper.id,)
+            llm = LLMClient()
+
+            prompt = build_summary_prompt(title=paper.title,full_text=content)
+            logger.info("Generating summary for paper %s", paper.id)
+            generated_summary = llm.generate_text(prompt)
+
+            summary=self.create(
+                db=db,
+                paper_id=paper.id,
+                summary_type=summary_type,
+                model_name=llm.model,
+                content=generated_summary,
+            )
+            logger.info("Summary created for paper %s",paper.id,)
             return summary
-
-        content = paper_content_service.get_or_create_content(
-            db=db,
-            paper=paper,
-        )
-        logger.info("Preparing content for summary generation for paper %s",paper.id,)
-        llm = LLMClient()
-
-        prompt = build_summary_prompt(title=paper.title,full_text=content)
-        logger.info("Generating summary for paper %s", paper.id)
-        generated_summary = llm.generate_text(prompt)
-
-        summary=self.create(
-            db=db,
-            paper_id=paper.id,
-            summary_type=summary_type,
-            model_name=llm.model,
-            content=generated_summary,
-        )
-        logger.info("Summary created for paper %s",paper.id,)
-        return summary
+        except Exception:
+            logger.exception("Failed to generate summary for paper %s",paper.id,)
+            raise
 
 summary_service = SummaryService()
