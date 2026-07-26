@@ -1,14 +1,17 @@
-from pydantic import BaseModel
+from pydantic import BaseModel , ConfigDict ,EmailStr , Field
+from typing import Annotated
 class UserCreate(BaseModel):
-    username : str
-    email : str
-    password : str
+    model_config = ConfigDict(extra="forbid")
+    username : Annotated[str,Field(min_length=3,max_length=20)]
+    email : EmailStr
+    password : Annotated[str,Field(min_length=8,max_length=120)]
 class UserResponse(BaseModel):
     id : int
     username : str
-    email : str
+    email : EmailStr
     class Config:
         from_attributes=True
 class UserLogin(BaseModel):
-    email:str
-    password :str
+    model_config = ConfigDict(extra="forbid")
+    email: EmailStr
+    password : Annotated[str,Field(min_length=8,max_length=120)]

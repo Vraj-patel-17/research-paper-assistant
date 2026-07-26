@@ -1,7 +1,8 @@
-from pydantic import BaseModel
-
+from pydantic import BaseModel,ConfigDict,Field
+from typing import Annotated
 class ChatRequest(BaseModel):
-    question: str
+    model_config=ConfigDict(extra="forbid")
+    question: Annotated[str,Field(min_length=3,max_length=1000)]
 
 class SourceReference(BaseModel):
     chunk_index: int

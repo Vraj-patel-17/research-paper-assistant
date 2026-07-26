@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel,AnyUrl
 
 class ArxivPaper(BaseModel):
     external_id: str
@@ -8,5 +8,5 @@ class ArxivPaper(BaseModel):
     abstract: str
     authors: list[str]
     published_at: datetime
-    pdf_url: str | None = None
+    pdf_url: AnyUrl | None = None
     categories: list[str]

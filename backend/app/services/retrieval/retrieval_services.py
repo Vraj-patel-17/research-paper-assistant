@@ -61,38 +61,3 @@ class RetrievalService:
             question=question,
             top_k=top_k,
         )
-
-    def search_chunks(
-    self,
-    paper_id: int,
-    question: str,
-) -> RetrievalDebugResponse:
-        logger.info("Searching chunks for paper %s",paper_id)
-        paper = PaperContentService.get_paper_by_id(
-            self.db,
-            paper_id,
-        )
-
-        content = self.paper_content_service.get_or_create_content(
-            db=self.db,
-            paper=paper,
-        )
-
-        chunks = self.retrieval_service.retrieve(
-            db=self.db,
-            paper_content=content,
-            question=question,
-        )
-        logger.debug("Returning %d retrieved chunks",len(chunks))
-        return RetrievalDebugResponse(
-            chunks=[
-                RetrievedChunkResponse(
-                    chunk_id=chunk.chunk_id,
-                    chunk_index=chunk.chunk_index,
-                    section=chunk.section,
-                    score=chunk.score,
-                    content=chunk.content,
-                )
-                for chunk in chunks
-            ]
-        )

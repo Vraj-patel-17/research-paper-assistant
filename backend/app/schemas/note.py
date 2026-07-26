@@ -1,11 +1,19 @@
-from pydantic import BaseModel
 from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field
 
 class NoteCreate(BaseModel):
-    content: str
+    model_config = ConfigDict(extra="forbid")
+    content: str = Field(
+        min_length=1,
+        max_length=10000,
+    )
 
 class NoteUpdate(BaseModel):
-    content: str
+    model_config = ConfigDict(extra="forbid")
+    content: str = Field(
+            min_length=1,
+            max_length=10000,
+        )
 
 class NoteResponse(BaseModel):
     id: int

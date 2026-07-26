@@ -1,3 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
+
 class AddPaperToCollection(BaseModel):
-    paper_id:int
+    model_config = ConfigDict(extra="forbid")
+
+    paper_id: int = Field(gt=0)
