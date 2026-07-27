@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -13,8 +13,8 @@ router = APIRouter(
     response_model=list[PaperDetailResponse],
 )
 def get_recommendations(
-    paper_id: int,
-    limit: int = 10,
+    paper_id: int = Path(gt=0),
+    limit: int = Query(default=10, ge=1, le=20),
     db: Session = Depends(get_db),
 ):
     service = RecommendationService(db)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Path
 from sqlalchemy.orm import Session
 from app.database import get_db
 from fastapi import Depends,HTTPException,status
@@ -10,16 +10,16 @@ from app.services.collection_services import add_paper_to_collection,get_collect
 router=APIRouter()
 
 @router.post("/collections/{collection_id}/papers",status_code=status.HTTP_201_CREATED)
-def add_paper(collection_id:int,data:AddPaperToCollection,db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
+def add_paper(data:AddPaperToCollection,collection_id:int= Path(gt=0),db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
     add_paper_to_collection(db=db,collection_id=collection_id,user_id=current_user.id,data=data)
     return {"message":"Paper added to collection successfully"}
 @router.get("/collections/{collection_id}/papers",response_model=list[PaperDetailResponse])
 
-def get_papers(collection_id:int,db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
+def get_papers(collection_id:int= Path(gt=0),db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
     return get_collection_papers(db=db,collection_id=collection_id,user_id=current_user.id)
 
 @router.delete("/collections/{collection_id}/papers/{paper_id}",status_code=status.HTTP_204_NO_CONTENT)
-def remove_paper(collection_id:int,paper_id:int,db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
+def remove_paper(collection_id:int= Path(gt=0),paper_id:int= Path(gt=0),db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
     remove_paper_from_collection(
         db=db,
         collection_id=collection_id,

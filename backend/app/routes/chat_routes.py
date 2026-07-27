@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends ,Path
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -12,9 +12,8 @@ router = APIRouter(
     "/{paper_id}/chat",
     response_model=ChatResponse,
 )
-def chat_with_paper(
-    paper_id: int,
-    request: ChatRequest,
+def chat_with_paper(request: ChatRequest,
+    paper_id: int = Path(gt=0),
     db: Session = Depends(get_db),
 ):
     service = ChatService(db)

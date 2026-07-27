@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -16,7 +16,7 @@ router = APIRouter(
     response_model=SummaryResponse,
 )
 def get_summary(
-    paper_id: int,
+    paper_id: int = Path(gt=0),
     db: Session = Depends(get_db),
 ):
 

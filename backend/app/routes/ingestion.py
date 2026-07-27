@@ -9,11 +9,8 @@ router = APIRouter(
 )
 @router.post("/arxiv")
 def ingest_arxiv(request: ArxivIngestionRequest,db:Session=Depends(get_db)):
-    print("Creating service")
     service=PaperIngestionService(db)
-    print("Calling service")
     result=service.ingest_arxiv(query=request.query,start=request.start,max_results=request.max_results)
-    print("Service finished")
     return result
 
     

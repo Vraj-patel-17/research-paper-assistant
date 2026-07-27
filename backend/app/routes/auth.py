@@ -8,7 +8,7 @@ from app.models.user import User
 from app.schemas.user import UserResponse
 from app.services.user_service import authenticate_user
 router=APIRouter()
-@router.post('/login')
+@router.post('/login', status_code=200)
 def authenticate(form_data:OAuth2PasswordRequestForm=Depends(),db: Session=Depends(get_db)):
     user=authenticate_user(db,form_data.username,form_data.password)
     if not user:
@@ -17,4 +17,8 @@ def authenticate(form_data:OAuth2PasswordRequestForm=Depends(),db: Session=Depen
     return {"access_token":token,"token_type":"bearer"}
 @router.get("/me",response_model=UserResponse)
 def get_me(current_user:User=Depends(get_current_user)):
-    return {"id":current_user.id,"email":current_user.email}
+   return {
+    "id": current_user.id,
+    "username": current_user.username,
+    "email": current_user.email,
+}

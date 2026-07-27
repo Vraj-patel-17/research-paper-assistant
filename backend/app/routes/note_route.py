@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.note import NoteCreate, NoteResponse,NoteUpdate
@@ -7,7 +7,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 router = APIRouter(prefix="/papers",tags=["Notes"],)
 @router.post("/{paper_id}/notes",response_model=NoteResponse,)
-def note(paper_id:int,note_data:NoteCreate,db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
+def note(note_data:NoteCreate,paper_id:int=Path(gt=0),db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
     service = NoteService(db)
     note = service.create_note(
     user_id=current_user.id,
@@ -21,7 +21,7 @@ def note(paper_id:int,note_data:NoteCreate,db:Session=Depends(get_db),current_us
     response_model=list[NoteResponse],
 )
 def get_notes(
-    paper_id: int,
+    paper_id: int=Path(gt=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -36,8 +36,8 @@ def get_notes(
     response_model=NoteResponse,
 )
 def update_note(
-    note_id: int,
     note_data: NoteUpdate,
+    note_id: int=Path(gt=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -59,7 +59,7 @@ def update_note(
 
 @router.delete("/notes/{note_id}", status_code=204)
 def delete_note(
-    note_id: int,
+    note_id: int=Path(gt=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

@@ -11,3 +11,4 @@ google-genai
 pymupdf
 rank-bm25
 pgvector
+python-jose
