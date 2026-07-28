@@ -6,9 +6,10 @@ from app.routes.summary_route import router as summary_router
 from app.core.logging import setup_logging
 from app.routes import recommendation_route
 from app.routes import chat_routes
-
+from app.core.exception_handlers import register_exception_handlers
 setup_logging()
 app=FastAPI()
+register_exception_handlers(app)
 @app.get("/")
 async def root():
     return {"message":"Research Paper Assistant API"}
