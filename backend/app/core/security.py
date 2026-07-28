@@ -9,7 +9,7 @@ from app.models.user import User
 from app.core.config import settings
 from dotenv import load_dotenv
 load_dotenv()
-SECRET_KEY=settings.se
+SECRET_KEY=settings.secret_key
 ALGORITHM=settings.algorithm
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
 def hash_password(password : str):

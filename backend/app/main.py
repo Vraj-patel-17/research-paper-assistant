@@ -7,15 +7,18 @@ from app.core.logging import setup_logging
 from app.routes import recommendation_route
 from app.routes import chat_routes
 from app.core.exception_handlers import register_exception_handlers
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
 setup_logging()
 app=FastAPI()
 register_exception_handlers(app)
-@app.get("/")
-async def root():
-    return {"message":"Research Paper Assistant API"}
-@app.get("/health")
-async def health():
-    return { "status": "healthy"}
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=settings.allowed_origins,
+    allow_methods=["*"],
+    allow_headers=["*"])
+
 app.include_router(auth.router)
 app.include_router(user_route.router)
 app.include_router(paper_route.router)

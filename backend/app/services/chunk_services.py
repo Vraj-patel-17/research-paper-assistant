@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import re
+from app.core.config import settings
 
 @dataclass
 class Chunk:
@@ -13,11 +14,11 @@ class ChunkService:
     )
     def __init__(
         self,
-        chunk_size: int = 250,
-        chunk_overlap: int = 50,
+        chunk_size: int ,
+        chunk_overlap: int 
     ):
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+        self.chunk_size = settings.chunk_size
+        self.chunk_overlap = settings.chunk_overlap
     
     def is_heading(self,text:str)->bool:
         words=text.split()

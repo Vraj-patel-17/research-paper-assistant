@@ -32,6 +32,12 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+    allowed_origins: list[str] = Field(
+        default=[
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ]
+    )#later replace with frontend url
 
 
 @lru_cache
