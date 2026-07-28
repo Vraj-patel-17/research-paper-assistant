@@ -12,3 +12,4 @@ pymupdf
 rank-bm25
 pgvector
 python-jose
+pydantic-settings

@@ -7,9 +7,9 @@ logger = get_logger(__name__)
 class LLMClient(GeminiClient):
     def __init__(self):
         super().__init__()
-        if not settings.GEMINI_API_KEY:
+        if not settings.google_api_key:
             raise ValueError("GEMINI_API_KEY is not set.")
-        self.model = settings.GEMINI_MODEL
+        self.model = settings.llm_model
 
     def generate_text(self, prompt: str) -> str:
         try:

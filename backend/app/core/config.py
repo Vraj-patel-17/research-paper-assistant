@@ -1,26 +1,42 @@
-import os
+from functools import lru_cache
 
-from dotenv import load_dotenv
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
+class Settings(BaseSettings):
+    # App
+    app_name: str = "Research Paper Assistant"
+    debug: bool = False
 
+    # Database
+    database_url: str
 
-class Settings:
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    # JWT
+    secret_key: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
 
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv(
-        "GEMINI_MODEL",
-        "gemini-2.5-flash",
+    # Gemini
+    google_api_key: str
+
+    # RAG
+    embedding_model: str = "gemini-embedding-001"
+    llm_model: str = "gemini-2.5-flash"
+
+    # Chunking
+    chunk_size: int = Field(default=250, gt=0)
+    chunk_overlap: int = Field(default=50, ge=0)
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
     )
-    GEMINI_EMBEDDING_MODEL: str = "gemini-embedding-001"
-    PDF_TIMEOUT: int = int(
-        os.getenv("PDF_TIMEOUT", "30")
-    )
-
-    SUMMARY_MAX_WORDS: int = int(
-        os.getenv("SUMMARY_MAX_WORDS", "300")
-    )
 
 
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

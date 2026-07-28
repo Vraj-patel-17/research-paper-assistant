@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 class EmbeddingService(GeminiClient):
     def __init__(self):
         super().__init__()
-        self.model=settings.GEMINI_EMBEDDING_MODEL
+        self.model=settings.embedding_model
     def generate_embedding(self, text: str) -> list[float]:
         try:
             logger.info("Generating embeddings") 

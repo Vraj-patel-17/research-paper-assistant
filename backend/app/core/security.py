@@ -6,12 +6,11 @@ from datetime import datetime,timedelta
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
-import os
+from app.core.config import settings
 from dotenv import load_dotenv
 load_dotenv()
-SECRET_KEY=os.getenv("SECRET_KEY")
-ALGORITHM=os.getenv("ALGORITHM")
-import os
+SECRET_KEY=settings.se
+ALGORITHM=settings.algorithm
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
 def hash_password(password : str):
     return pwd_context.hash(password)
