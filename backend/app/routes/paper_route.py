@@ -5,7 +5,7 @@ from typing import Optional
 from app.services.paper_services import get_all_papers,get_paper_by_id
 from app.schemas.paper import PaperDetailResponse
 from fastapi import Depends,HTTPException
-router=APIRouter()
+router=APIRouter(prefix="/papers",tags=["Papers"],)
 @router.get("/papers")
 def get_papers(db:Session=Depends(get_db),
     q: Optional[str] = Query(default=None, min_length=2, max_length=200),

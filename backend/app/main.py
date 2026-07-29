@@ -10,7 +10,9 @@ from app.core.exception_handlers import register_exception_handlers
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 setup_logging()
-app=FastAPI()
+app=FastAPI(title="Research Paper Assistant API",
+    description="Backend API for AI-powered research paper discovery and analysis.",
+    version="1.0.0",)
 register_exception_handlers(app)
 app.add_middleware(
     CORSMiddleware,
@@ -18,7 +20,12 @@ app.add_middleware(
     allow_origins=settings.allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"])
-
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy",
+        "service": "research-paper-assistant",
+    }
 app.include_router(auth.router)
 app.include_router(user_route.router)
 app.include_router(paper_route.router)
