@@ -8,6 +8,7 @@ from app.routes import recommendation_route
 from app.routes import chat_routes
 from app.core.exception_handlers import register_exception_handlers
 from fastapi.middleware.cors import CORSMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.core.config import settings
 setup_logging()
 app=FastAPI(title="Research Paper Assistant API",
@@ -26,6 +27,7 @@ def health():
         "status": "healthy",
         "service": "research-paper-assistant",
     }
+app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(auth.router)
 app.include_router(user_route.router)
 app.include_router(paper_route.router)
