@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,Request
+from app.core.rate_limiter import limiter
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 from app.database import get_db
@@ -9,7 +10,8 @@ from app.schemas.user import UserResponse
 from app.services.user_service import authenticate_user
 router=APIRouter()
 @router.post('/login', status_code=200)
-def authenticate(form_data:OAuth2PasswordRequestForm=Depends(),db: Session=Depends(get_db)):
+@limiter.limit("5/minute")
+def authenticate(request:Request,form_data:OAuth2PasswordRequestForm=Depends(),db: Session=Depends(get_db)):
     user=authenticate_user(db,form_data.username,form_data.password)
     if not user:
         raise HTTPException(status_code=401,detail="Invalid credentials")

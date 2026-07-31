@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query , Request
+from app.core.rate_limiter import limiter
 from sqlalchemy.orm import Session
 from app.database import get_db
 from typing import Optional
@@ -7,7 +8,8 @@ from app.schemas.paper import PaperDetailResponse
 from fastapi import Depends,HTTPException
 router=APIRouter(prefix="/papers",tags=["Papers"],)
 @router.get("/papers")
-def get_papers(db:Session=Depends(get_db),
+@limiter.limit("60/minute")
+def get_papers(request:Request,db:Session=Depends(get_db),
     q: Optional[str] = Query(default=None, min_length=2, max_length=200),
     source: Optional[str] = Query(default=None, min_length=2, max_length=50),
     topic:Optional[str]=Query(default=None, min_length=2, max_length=50),

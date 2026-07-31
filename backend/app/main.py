@@ -9,11 +9,19 @@ from app.routes import chat_routes
 from app.core.exception_handlers import register_exception_handlers
 from fastapi.middleware.cors import CORSMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from app.core.rate_limiter import limiter
 from app.core.config import settings
 setup_logging()
 app=FastAPI(title="Research Paper Assistant API",
     description="Backend API for AI-powered research paper discovery and analysis.",
     version="1.0.0",)
+
+app.add_middleware(SlowAPIMiddleware)
+app.state.limiter = limiter
+app.add_exception_handler( RateLimitExceeded, _rate_limit_exceeded_handler,)
 register_exception_handlers(app)
 app.add_middleware(
     CORSMiddleware,

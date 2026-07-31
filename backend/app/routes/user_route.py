@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query ,Request
+from app.core.rate_limiter import limiter
 from sqlalchemy.orm import Session
 from pydantic import EmailStr
 from app.database import get_db
@@ -10,7 +11,8 @@ from app.core.security import get_current_user
 router=APIRouter()
 
 @router.post("/users",response_model=UserResponse)
-def create_new_user(user: UserCreate,db: Session=Depends(get_db)):
+@limiter.limit("5/minute")
+def create_new_user(request:Request,user: UserCreate,db: Session=Depends(get_db)):
     new_user=create_user(db,user.username,user.email,user.password)
     return new_user
 @router.get("/users/{email}")
