@@ -6,6 +6,7 @@ from app.routes.summary_route import router as summary_router
 from app.core.logging import setup_logging
 from app.routes import recommendation_route
 from app.routes import chat_routes
+from app.routes import health
 from app.core.exception_handlers import register_exception_handlers
 from fastapi.middleware.cors import CORSMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
@@ -29,13 +30,9 @@ app.add_middleware(
     allow_origins=settings.allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"])
-@app.get("/health")
-def health():
-    return {
-        "status": "healthy",
-        "service": "research-paper-assistant",
-    }
+
 app.add_middleware(SecurityHeadersMiddleware)
+app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(user_route.router)
 app.include_router(paper_route.router)

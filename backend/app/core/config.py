@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
 
     # Gemini
-    google_api_key: str
+    google_api_key: str = Field(alias="GEMINI_API_KEY")
 
     # RAG
     embedding_model: str = "gemini-embedding-001"

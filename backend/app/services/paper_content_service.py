@@ -5,12 +5,13 @@ from app.models.paper_content import PaperContent
 from app.models.paperchunk import PaperChunk
 from app.services.pdf_service import pdf_service
 from app.services.chunk_services import ChunkService
+from app.core.config import settings
 from app.services.embeddings.embedding_service import EmbeddingService
 import logging
 logger = logging.getLogger(__name__)
 class PaperContentService:
     def __init__(self):
-        self.chunk_service = ChunkService()
+        self.chunk_service = ChunkService(settings.chunk_size,settings.chunk_overlap)
         self.embedding_service = EmbeddingService()
     def get_by_paper_id(
         self,
