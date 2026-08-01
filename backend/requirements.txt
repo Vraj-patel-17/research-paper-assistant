@@ -14,3 +14,5 @@ pgvector
 python-jose
 pydantic-settings
 slowapi
+email-validator
+python-multipart
