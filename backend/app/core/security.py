@@ -7,8 +7,6 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.core.config import settings
-from dotenv import load_dotenv
-load_dotenv()
 SECRET_KEY=settings.secret_key
 ALGORITHM=settings.algorithm
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
