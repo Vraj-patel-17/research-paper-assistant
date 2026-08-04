@@ -8,14 +8,18 @@ from app.schemas.user import UserCreate,UserLogin,UserResponse
 from app.models.user import User
 from fastapi import Depends,HTTPException
 from app.core.security import get_current_user
+from sqlalchemy.exc import IntegrityError
 router=APIRouter()
 
 @router.post("/users",response_model=UserResponse)
 @limiter.limit("5/minute")
 def create_new_user(request:Request,user: UserCreate,db: Session=Depends(get_db)):
-    new_user=create_user(db,user.username,user.email,user.password)
-    return new_user
-@router.get("/users/{email}")
+    try:
+     return create_user(db,user.username,user.email,user.password)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409,detail="Username or email already exists")
+@router.get("/users/{emai Integl}")
 def get_user(email:EmailStr,db: Session=Depends(get_db),current_user:User=Depends(get_current_user)):
     user=get_user_by_email(db,email)
     if not user:

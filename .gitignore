@@ -7,3 +7,5 @@ __pycache__/
 *.sql
 backup.sql
 docker-compose.yml
+.env.test
+.coverage
