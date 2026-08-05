@@ -7,7 +7,7 @@ from app.services.paper_services import get_all_papers,get_paper_by_id
 from app.schemas.paper import PaperDetailResponse
 from fastapi import Depends,HTTPException
 router=APIRouter(prefix="/papers",tags=["Papers"],)
-@router.get("/papers")
+@router.get("")
 @limiter.limit("60/minute")
 def get_papers(request:Request,db:Session=Depends(get_db),
     q: Optional[str] = Query(default=None, min_length=2, max_length=200),
@@ -24,7 +24,7 @@ def get_papers(request:Request,db:Session=Depends(get_db),
         offset=offset,
     )
 
-@router.get("/papers/{paper_id}",response_model=PaperDetailResponse)
+@router.get("/{paper_id}",response_model=PaperDetailResponse)
 def get_paper_from_id(paper_id:int=Path(gt=0),db:Session=Depends(get_db)):
     paper=get_paper_by_id(db,paper_id)
     if not paper:

@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from app.database import Base, get_db
 from app.main import app
 from app.models.user import User
+from app.models.paper import Paper
 from app.core.security import hash_password
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -107,3 +108,19 @@ def auth_headers(client, test_user):
         "Authorization": f"Bearer {token}"
     }
 
+@pytest.fixture
+def test_paper(db_session):
+    paper = Paper(
+        title="Test Paper",
+        abstract="Test Abstract",
+        authors="John Doe",
+        source="arXiv",
+        external_id="test123",
+        pdf_url="https://example.com/test.pdf",
+    )
+
+    db_session.add(paper)
+    db_session.commit()
+    db_session.refresh(paper)
+
+    return paper
