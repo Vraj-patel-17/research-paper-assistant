@@ -16,8 +16,15 @@ def get_all_papers(db:Session,q:str|None=None,source:str |None=None,topic: str |
      if topic:
           query=(query.join(PaperTopic,Paper.id==PaperTopic.paper_id).join(Topic,PaperTopic.topic_id==Topic.id).filter(Topic.slug==topic))
      query = query.order_by(Paper.publication_date.desc())
-
-     return query.offset(offset).limit(limit).all()
+     total = query.count()
+     papers=(query.offset(offset).limit(limit).all())
+     return {
+          "items":papers,
+          "total": total,
+          "limit": limit,
+          "offset": offset,
+          "has_next": offset + limit < total,
+     }
 
 def get_paper_by_id(db:Session,paper_id):
      return ( db.query(Paper).filter(Paper.id==paper_id).first())

@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from typing import Optional
 from app.services.paper_services import get_all_papers,get_paper_by_id
-from app.schemas.paper import PaperDetailResponse
+from app.schemas.paper import PaperDetailResponse,PaperListResponse
 from fastapi import Depends,HTTPException
 router=APIRouter(prefix="/papers",tags=["Papers"],)
-@router.get("")
+@router.get("",response_model=PaperListResponse)
 @limiter.limit("60/minute")
 def get_papers(request:Request,db:Session=Depends(get_db),
     q: Optional[str] = Query(default=None, min_length=2, max_length=200),

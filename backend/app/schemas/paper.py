@@ -13,3 +13,19 @@ class PaperDetailResponse(BaseModel):
 
     class Config:
         from_attributes = True
+class PaperResponse(BaseModel):
+    id: int
+    title: str
+    authors: str
+    publication_date: datetime | None
+    source: str
+
+    class Config:
+        from_attributes = True
+
+class PaperListResponse(BaseModel):
+    items: list[PaperResponse]
+    total: int
+    limit: int
+    offset: int
+    has_next: bool
