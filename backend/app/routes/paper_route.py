@@ -13,6 +13,7 @@ def get_papers(request:Request,db:Session=Depends(get_db),
     q: Optional[str] = Query(default=None, min_length=2, max_length=200),
     source: Optional[str] = Query(default=None, min_length=2, max_length=50),
     topic:Optional[str]=Query(default=None, min_length=2, max_length=50),
+    sort: str =Query(default="latest",pattern="^(latest|oldest|title)$"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0)):
     return get_all_papers(
@@ -20,6 +21,7 @@ def get_papers(request:Request,db:Session=Depends(get_db),
         q=q,
         source=source,
         topic=topic,
+        sort=sort,
         limit=limit,
         offset=offset,
     )
