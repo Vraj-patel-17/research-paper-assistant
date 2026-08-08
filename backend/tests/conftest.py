@@ -11,7 +11,7 @@ from app.main import app
 from app.models.user import User
 from app.models.paper import Paper
 from app.core.security import hash_password
-
+from app.core.rate_limiter import limiter
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(DATABASE_URL)
@@ -70,10 +70,11 @@ def client(db_session):
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
-
+    limiter.enabled = False
+    
     with TestClient(app) as client:
         yield client
-
+    limiter.enabled = True
     app.dependency_overrides.clear()
 
 @pytest.fixture()

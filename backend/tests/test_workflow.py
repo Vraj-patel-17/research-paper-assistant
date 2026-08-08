@@ -46,7 +46,7 @@ def test_user_bookmark_workflow(client,test_paper):
     assert bookmarks.status_code == 200
 
     bookmarks = bookmarks.json()
-    assert any(b["id"] == paper_id for b in bookmarks)
+    assert any(b["paper_id"] == paper_id for b in bookmarks)
 
     # Step 6: Delete bookmark
     delete = client.delete(
@@ -62,4 +62,4 @@ def test_user_bookmark_workflow(client,test_paper):
     )
 
     bookmarks = bookmarks.json()
-    assert all(b["id"] != paper_id for b in bookmarks)
+    assert all(b["paper_id"] != paper_id for b in bookmarks)
