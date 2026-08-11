@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from jose import jwt
 from app.core.config import settings
-
+from app.core.rate_limiter import limiter
 def test_login_success(client, test_user):
     response = client.post(
     "/login",
@@ -77,3 +77,31 @@ def test_protected_endpoint_with_expired_token(client):
     )
 
     assert response.status_code == 401
+
+def test_login_rate_limit(client):
+    limiter.enabled = True
+
+    try:
+        credentials = {
+            "username": "nonexistent@example.com",
+            "password": "WrongPassword123",
+        }
+
+        responses = []
+
+        for _ in range(6):
+            response = client.post(
+                "/login",
+                data=credentials,
+            )
+            responses.append(response)
+
+        assert all(
+            response.status_code == 401
+            for response in responses[:5]
+        )
+
+        assert responses[5].status_code == 429
+
+    finally:
+        limiter.enabled = False
