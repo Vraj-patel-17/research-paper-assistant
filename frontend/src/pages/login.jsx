@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { setToken } from "../auth/auth";
 function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -33,18 +35,9 @@ function Login() {
 const token = data.access_token;
 setToken(token);
 
-const bookmarksResponse = await fetch(
-  `${import.meta.env.VITE_API_URL}/bookmarks`,
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
+navigate("/");
 
-const bookmarks = await bookmarksResponse.json();
 
-console.log("Bookmarks:", bookmarks);
   }
 
   return (

@@ -1,5 +1,5 @@
-function Login() {
+function Register() {
   return <h1>Register</h1>;
 }
 
-export default Login;
+export default Register;
