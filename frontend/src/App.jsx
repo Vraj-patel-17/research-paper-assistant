@@ -4,7 +4,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import PaperDetails from "./pages/PaperDetails";
 import ProtectedRoute from "./auth/ProtectedRoute";
-
+import Bookmarks from "./pages/Bookmarks";
 function App() {
   return (
     <BrowserRouter>
@@ -29,6 +29,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+              path="/bookmarks"
+              element={
+                <ProtectedRoute>
+                  <Bookmarks />
+                </ProtectedRoute>
+              }
+            />
       </Routes>
     </BrowserRouter>
   );
