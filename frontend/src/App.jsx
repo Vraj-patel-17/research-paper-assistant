@@ -5,9 +5,11 @@ import Dashboard from "./pages/Dashboard";
 import PaperDetails from "./pages/PaperDetails";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import Bookmarks from "./pages/Bookmarks";
+import Navbar from "./components/Navbar";
 function App() {
   return (
     <BrowserRouter>
+      <Navbar/>
       <Routes>
         <Route
           path="/"

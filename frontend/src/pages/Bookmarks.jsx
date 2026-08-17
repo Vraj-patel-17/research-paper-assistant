@@ -80,7 +80,7 @@ function Bookmarks() {
         ))
       )}
     </div>
-  );
+  );    
 }
 
 export default Bookmarks;
