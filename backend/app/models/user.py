@@ -4,14 +4,15 @@ from sqlalchemy import String,DateTime,func
 from sqlalchemy.orm import Mapped,mapped_column,relationship
 from app.database import Base
 from typing import TYPE_CHECKING
-
+from sqlalchemy.dialects.postgresql import UUID
+from uuid import uuid4
 if TYPE_CHECKING:
     from app.models.bookmark import Bookmark
     from app.models.note import Note
 class User(Base):
     __tablename__="users"
     
-    id: Mapped[int]=mapped_column(primary_key=True)
+    id: Mapped[UUID]=mapped_column(UUID(as_uuid=True),primary_key=True,default=uuid4)
     username: Mapped[str]=mapped_column(String(50),unique=True,nullable=False)
     email: Mapped[str]=mapped_column(String(100),unique=True,nullable=False)
     hashed_password: Mapped[str]=mapped_column(String(100))

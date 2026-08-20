@@ -5,7 +5,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 from typing import TYPE_CHECKING
-
+from sqlalchemy.dialects.postgresql import UUID
+from uuid import uuid4
 if TYPE_CHECKING:
     from app.models.paper_topic import PaperTopic
     from app.models.paper import Paper
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 class Topic(Base):
     __tablename__ = "topics"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[UUID]=mapped_column(UUID(as_uuid=True),primary_key=True,default=uuid4)
 
     name: Mapped[str] = mapped_column(
         String(100),

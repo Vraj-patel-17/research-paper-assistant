@@ -1,10 +1,10 @@
 from datetime import datetime
-
+from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 class PaperContentResponse(BaseModel):
-    id: int
-    paper_id: int
+    id: UUID
+    paper_id: UUID
     content: str
     created_at: datetime
     updated_at: datetime

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from uuid import UUID
 from app.services.paper_content_service import PaperContentService
 from app.services.retrieval.retrieval_services import RetrievalService
 from app.prompts.summary_prompt import build_chat_prompt
@@ -17,7 +17,7 @@ class ChatService:
         self.retrieval_service = RetrievalService()
         self.llm_client = LLMClient()
 
-    def chat(self,paper_id:int,question:str)->ChatResponse:
+    def chat(self,paper_id:UUID,question:str)->ChatResponse:
         try:
             logger.info("Processing chat request for paper %s", paper_id)
             paper = get_paper_by_id(self.db,paper_id=paper_id)

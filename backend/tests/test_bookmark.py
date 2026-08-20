@@ -1,7 +1,11 @@
+from uuid import uuid4
+
+
 def test_get_bookmarks_without_token(client):
     response = client.get("/bookmarks")
 
     assert response.status_code == 401
+
 
 def test_get_bookmarks_invalid_token(client):
     headers = {
@@ -12,38 +16,46 @@ def test_get_bookmarks_invalid_token(client):
 
     assert response.status_code == 401
 
+
 def test_bookmark_invalid_paper_id(client, auth_headers):
     response = client.post(
-        "/bookmarks/0",
+        "/bookmarks/not-a-uuid",
         headers=auth_headers,
     )
 
     assert response.status_code == 422
+
 
 def test_delete_bookmark_invalid_paper_id(client, auth_headers):
     response = client.delete(
-        "/bookmarks/-1",
+        "/bookmarks/not-a-uuid",
         headers=auth_headers,
     )
 
     assert response.status_code == 422
 
+
 def test_bookmark_nonexistent_paper(client, auth_headers):
+    nonexistent_paper_id = uuid4()
+
     response = client.post(
-        "/bookmarks/999999",
+        f"/bookmarks/{nonexistent_paper_id}",
         headers=auth_headers,
     )
 
     assert response.status_code == 404
-    
+
 
 def test_delete_nonexistent_bookmark(client, auth_headers):
+    nonexistent_paper_id = uuid4()
+
     response = client.delete(
-        "/bookmarks/999999",
+        f"/bookmarks/{nonexistent_paper_id}",
         headers=auth_headers,
     )
 
     assert response.status_code == 404
+
 
 def test_user_cannot_access_or_delete_another_users_bookmark(
     client,
@@ -121,7 +133,7 @@ def test_user_cannot_access_or_delete_another_users_bookmark(
 
     # User B must not see User A's bookmark
     assert all(
-        bookmark["paper_id"] != test_paper.id
+        bookmark["paper_id"] != str(test_paper.id)
         for bookmark in bookmarks
     )
 
@@ -144,9 +156,10 @@ def test_user_cannot_access_or_delete_another_users_bookmark(
     bookmarks = verify.json()
 
     assert any(
-        bookmark["paper_id"] == test_paper.id
+        bookmark["paper_id"] == str(test_paper.id)
         for bookmark in bookmarks
     )
+
 
 def test_duplicate_bookmark(client, auth_headers, test_paper):
     first = client.post(
@@ -176,7 +189,8 @@ def test_duplicate_bookmark(client, auth_headers, test_paper):
     matching = [
         bookmark
         for bookmark in bookmarks
-        if bookmark["paper_id"] == test_paper.id
+        if bookmark["paper_id"] == str(test_paper.id)
     ]
 
     assert len(matching) == 1
+

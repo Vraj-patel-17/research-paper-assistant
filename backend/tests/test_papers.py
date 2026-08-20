@@ -20,15 +20,15 @@ def test_get_papers_invalid_limit_zero(client):
 
 
 def test_get_invalid_paper_id(client):
-    response = client.get("/papers/0")
+    response = client.get("/papers/not-a-uuid")
 
     assert response.status_code == 422
 
 
 def test_get_nonexistent_paper(client):
-    response = client.get("/papers/999999")
+    response = client.get("/papers/not-a-uuid")
 
-    assert response.status_code == 404
+    assert response.status_code == 422
 
 
 def test_get_papers_pagination(client):

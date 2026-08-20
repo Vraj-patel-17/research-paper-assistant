@@ -3,6 +3,7 @@ from app.models.paper_topic import PaperTopic
 from app.models.topic import Topic
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from uuid import UUID
 def get_all_papers(db:Session,q:str|None=None,source:str |None=None,topic: str | None = None,sort: str = "latest",limit:int=20,offset:int=0):
      query=db.query(Paper)
      if q:
@@ -32,5 +33,5 @@ def get_all_papers(db:Session,q:str|None=None,source:str |None=None,topic: str |
           "has_next": offset + limit < total,
      }
 
-def get_paper_by_id(db:Session,paper_id):
+def get_paper_by_id(db:Session,paper_id:UUID):
      return ( db.query(Paper).filter(Paper.id==paper_id).first())

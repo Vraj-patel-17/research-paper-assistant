@@ -7,8 +7,8 @@ from sqlalchemy import select
 from app.models.paper import Paper
 from app.models.collection_paper import CollectionPaper
 from app.schemas.collection_paper import AddPaperToCollection
-
-def create_collection(db: Session,user_id: int,collection_data: CollectionCreate,) -> Collection:
+from uuid import UUID
+def create_collection(db: Session,user_id: UUID,collection_data: CollectionCreate,) -> Collection:
     collection = Collection(name=collection_data.name,description=collection_data.description,user_id=user_id,)
 
     db.add(collection)
@@ -23,10 +23,10 @@ def create_collection(db: Session,user_id: int,collection_data: CollectionCreate
         )
     return collection
 
-def get_user_collections(db: Session,user_id: int,) -> list[Collection]:
+def get_user_collections(db: Session,user_id: UUID,) -> list[Collection]:
     return (db.query(Collection).filter(Collection.user_id == user_id).all())
 
-def get_collection_by_id(db: Session,collection_id: int,user_id: int,) -> Collection:
+def get_collection_by_id(db: Session,collection_id: UUID,user_id: UUID,) -> Collection:
     collection = (db.query(Collection).filter(Collection.id == collection_id,Collection.user_id == user_id,).first())
 
     if collection is None:
@@ -36,15 +36,15 @@ def get_collection_by_id(db: Session,collection_id: int,user_id: int,) -> Collec
         )
     return collection
 
-def delete_collection(db: Session,collection_id: int,user_id: int,):
+def delete_collection(db: Session,collection_id: UUID,user_id: UUID,):
     collection = get_collection_by_id(db,collection_id,user_id,)
     db.delete(collection)
     db.commit()
 
 def add_paper_to_collection(
     db:Session,
-    collection_id:int,
-    user_id:int,
+    collection_id:UUID,
+    user_id:UUID,
     data:AddPaperToCollection
 ):
     collection=get_collection_by_id(db,collection_id,user_id)
@@ -68,8 +68,8 @@ def add_paper_to_collection(
     db.commit()
 def get_collection_papers(
     db:Session,
-    collection_id:int,
-    user_id:int
+    collection_id:UUID,
+    user_id:UUID
 ):
     get_collection_by_id(db,collection_id,user_id)
 
@@ -83,9 +83,9 @@ def get_collection_papers(
 
 def remove_paper_from_collection(
     db:Session,
-    collection_id:int,
-    paper_id:int,
-    user_id:int
+    collection_id:UUID,
+    paper_id:UUID,
+    user_id:UUID
 ):
     get_collection_by_id(db,collection_id,user_id)
 

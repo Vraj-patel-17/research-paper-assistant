@@ -6,7 +6,8 @@ from sqlalchemy import DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
-
+from sqlalchemy.dialects.postgresql import UUID
+from uuid import uuid4
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.paper import Paper
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 class Note(Base):
     __tablename__ = "notes"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[UUID]=mapped_column(UUID(as_uuid=True),primary_key=True,default=uuid4)
 
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -30,11 +31,11 @@ class Note(Base):
         onupdate=func.now(),
     )
 
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE")
     )
 
-    paper_id: Mapped[int] = mapped_column(
+    paper_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
         ForeignKey("papers.id", ondelete="CASCADE")
     )
 

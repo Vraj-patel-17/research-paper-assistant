@@ -1,27 +1,32 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
+from uuid import UUID
+
 from app.schemas.topic import TopicResponse
+
+
 class PaperDetailResponse(BaseModel):
-    id:int
-    title:str
-    authors:str
-    abstract:str
-    pdf_url:str
-    publication_date:datetime | None
+    id: UUID
+    title: str
+    authors: str
+    abstract: str
+    pdf_url: str
+    publication_date: datetime | None
     source: str
     topics: list[TopicResponse]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
 class PaperResponse(BaseModel):
-    id: int
+    id: UUID
     title: str
     authors: str
     publication_date: datetime | None
     source: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class PaperListResponse(BaseModel):
     items: list[PaperResponse]

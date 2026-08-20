@@ -7,6 +7,7 @@ from app.services.pdf_service import pdf_service
 from app.services.chunk_services import ChunkService
 from app.core.config import settings
 from app.services.embeddings.embedding_service import EmbeddingService
+from uuid import UUID
 import logging
 logger = logging.getLogger(__name__)
 class PaperContentService:
@@ -16,7 +17,7 @@ class PaperContentService:
     def get_by_paper_id(
         self,
         db: Session,
-        paper_id: int,
+        paper_id: UUID,
     ) -> PaperContent | None:
         return (
             db.query(PaperContent)
@@ -27,7 +28,7 @@ class PaperContentService:
     def create(
         self,
         db: Session,
-        paper_id: int,
+        paper_id: UUID,
         content: str,
     ) -> PaperContent:
 

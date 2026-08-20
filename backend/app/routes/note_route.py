@@ -5,9 +5,10 @@ from app.schemas.note import NoteCreate, NoteResponse,NoteUpdate
 from app.services.note_service import NoteService
 from app.core.security import get_current_user
 from app.models.user import User
+from uuid import UUID
 router = APIRouter(prefix="/papers",tags=["Notes"],)
 @router.post("/{paper_id}/notes",response_model=NoteResponse,)
-def note(note_data:NoteCreate,paper_id:int=Path(gt=0),db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
+def note(note_data:NoteCreate,paper_id:UUID,db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
     service = NoteService(db)
     note = service.create_note(
     user_id=current_user.id,
@@ -21,7 +22,7 @@ def note(note_data:NoteCreate,paper_id:int=Path(gt=0),db:Session=Depends(get_db)
     response_model=list[NoteResponse],
 )
 def get_notes(
-    paper_id: int=Path(gt=0),
+    paper_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -37,7 +38,7 @@ def get_notes(
 )
 def update_note(
     note_data: NoteUpdate,
-    note_id: int=Path(gt=0),
+    note_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -59,7 +60,7 @@ def update_note(
 
 @router.delete("/notes/{note_id}", status_code=204)
 def delete_note(
-    note_id: int=Path(gt=0),
+    note_id:UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

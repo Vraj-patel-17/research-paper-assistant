@@ -3,14 +3,15 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from pgvector.sqlalchemy import Vector 
 from app.database import Base
-
+from sqlalchemy.dialects.postgresql import UUID
+from uuid import uuid4
 
 class PaperChunk(Base):
     __tablename__ = "paper_chunks"
     __table_args__=(UniqueConstraint("paper_content_id","chunk_index",name="uq_paper_content_chunk_index"),)
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[UUID]=mapped_column(UUID(as_uuid=True),primary_key=True,default=uuid4)
 
-    paper_content_id: Mapped[int] = mapped_column(
+    paper_content_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
         ForeignKey("paper_contents.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

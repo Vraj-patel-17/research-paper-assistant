@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
-
+from uuid import UUID
 class NoteCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     content: str = Field(
@@ -16,12 +16,12 @@ class NoteUpdate(BaseModel):
         )
 
 class NoteResponse(BaseModel):
-    id: int
+    id: UUID
     content: str
     created_at: datetime
     updated_at: datetime
-    paper_id: int
-    user_id: int
+    paper_id: UUID
+    user_id: UUID
 
     class Config:
         from_attributes = True

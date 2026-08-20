@@ -3,7 +3,8 @@ import datetime
 from sqlalchemy import String,DateTime,func,UniqueConstraint,Text
 from sqlalchemy.orm import Mapped,mapped_column,relationship
 from app.database import Base
-
+from sqlalchemy.dialects.postgresql import UUID
+from uuid import uuid4
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ class Paper(Base):
     __table_args__ = (
         UniqueConstraint("source", "external_id", name="uq_paper_source_external_id"),
     )
-    id: Mapped[int]=mapped_column(primary_key=True)
+    id: Mapped[UUID]=mapped_column(UUID(as_uuid=True),primary_key=True,default=uuid4)
     external_id: Mapped[str]=mapped_column(String(50),nullable=False)
     source: Mapped[str]=mapped_column(String(50),nullable=False)
     title: Mapped[str]=mapped_column(String(500),nullable=False)

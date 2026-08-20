@@ -1,4 +1,5 @@
 def test_collections_workflow(client, test_paper):
+
     # Step 1: Register
     register = client.post(
         "/users",
@@ -69,7 +70,7 @@ def test_collections_workflow(client, test_paper):
     add_paper = client.post(
         f"/collections/{collection_id}/papers",
         json={
-            "paper_id": test_paper.id,
+            "paper_id": str(test_paper.id),
         },
         headers=headers,
     )
@@ -87,7 +88,7 @@ def test_collections_workflow(client, test_paper):
     papers = get_papers.json()
 
     assert any(
-        paper["id"] == test_paper.id
+        paper["id"] == str(test_paper.id)
         for paper in papers
     )
 
@@ -106,8 +107,9 @@ def test_collections_workflow(client, test_paper):
     )
 
     assert get_papers_after_remove.status_code == 200
+
     assert all(
-        paper["id"] != test_paper.id
+        paper["id"] != str(test_paper.id)
         for paper in get_papers_after_remove.json()
     )
 
@@ -127,7 +129,9 @@ def test_collections_workflow(client, test_paper):
 
     assert get_deleted.status_code == 404
 
+
 def test_user_cannot_access_another_users_collection(client):
+
     # User A — register
     register_a = client.post(
         "/users",
@@ -199,10 +203,12 @@ def test_user_cannot_access_another_users_collection(client):
 
     assert response.status_code == 404
 
+
 def test_user_cannot_modify_or_delete_another_users_collection(
     client,
     test_paper,
 ):
+
     # User A — register
     register_a = client.post(
         "/users",
@@ -269,7 +275,9 @@ def test_user_cannot_modify_or_delete_another_users_collection(
     # User B — attempt to add a paper
     add_paper = client.post(
         f"/collections/{collection_id}/papers",
-        json={"paper_id": test_paper.id},
+        json={
+            "paper_id": str(test_paper.id),
+        },
         headers=headers_b,
     )
 
@@ -300,7 +308,9 @@ def test_user_cannot_modify_or_delete_another_users_collection(
     assert verify.status_code == 200
     assert verify.json()["id"] == collection_id
 
+
 def test_duplicate_collection_name(client):
+
     # Register
     register = client.post(
         "/users",
@@ -347,7 +357,5 @@ def test_duplicate_collection_name(client):
         headers=headers,
     )
 
-    print(second.status_code)
-    print(second.json())
-
     assert second.status_code in (201, 400, 409)
+

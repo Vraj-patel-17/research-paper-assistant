@@ -6,6 +6,7 @@ from typing import Optional
 from app.services.paper_services import get_all_papers,get_paper_by_id
 from app.schemas.paper import PaperDetailResponse,PaperListResponse
 from fastapi import Depends,HTTPException
+from uuid import UUID
 router=APIRouter(prefix="/papers",tags=["Papers"],)
 @router.get("",response_model=PaperListResponse)
 @limiter.limit("60/minute")
@@ -27,7 +28,7 @@ def get_papers(request:Request,db:Session=Depends(get_db),
     )
 
 @router.get("/{paper_id}",response_model=PaperDetailResponse)
-def get_paper_from_id(paper_id:int=Path(gt=0),db:Session=Depends(get_db)):
+def get_paper_from_id(paper_id:UUID,db:Session=Depends(get_db)):
     paper=get_paper_by_id(db,paper_id)
     if not paper:
         raise HTTPException(status_code=404,detail="No paper found")

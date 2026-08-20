@@ -6,6 +6,7 @@ from app.models.summary import Summary
 from app.services.paper_content_service import paper_content_service
 from app.services.llm_client import LLMClient
 from app.prompts.summary_prompt import build_summary_prompt
+from uuid import UUID
 import logging
 logger = logging.getLogger(__name__)
 class SummaryService:
@@ -13,7 +14,7 @@ class SummaryService:
     def get_by_paper_id(
         self,
         db: Session,
-        paper_id: int,
+        paper_id: UUID,
         summary_type: str = "standard",
     ) -> Summary | None:
         return (
@@ -28,7 +29,7 @@ class SummaryService:
     def create(
         self,
         db: Session,
-        paper_id: int,
+        paper_id: UUID,
         summary_type: str,
         model_name: str,
         content: str,

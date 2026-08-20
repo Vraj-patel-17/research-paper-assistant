@@ -1,11 +1,11 @@
 from datetime import datetime
-
+from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 class SummaryResponse(BaseModel):
-    id: int
-    paper_id: int
-    summary_type: str
+    id: UUID
+    paper_id: UUID
+    summary_type: str 
     model_name: str
     content: str
     created_at: datetime
