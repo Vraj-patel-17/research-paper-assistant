@@ -49,4 +49,4 @@ jobs:
           SECRET_KEY: test-secret-key
           GEMINI_API_KEY: test-gemini-key
         run: |
-          pytest -v
+          python -m pytest -v
