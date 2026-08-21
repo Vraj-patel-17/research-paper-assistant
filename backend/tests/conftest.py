@@ -1,5 +1,8 @@
-from dotenv import load_dotenv
 import os
+
+os.environ["ENV_FILE"] = ".env.test"
+
+from dotenv import load_dotenv
 
 load_dotenv(".env.test")
 import pytest

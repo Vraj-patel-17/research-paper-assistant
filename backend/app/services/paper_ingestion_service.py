@@ -26,7 +26,7 @@ class PaperIngestionService:
                 title=paper.title,
                 authors=", ".join(paper.authors),
                 abstract=paper.abstract,
-                pdf_url=paper.pdf_url,
+                pdf_url=str(paper.pdf_url),
                 publication_date=paper.published_at,
             )
             new_papers.append(db_paper)
