@@ -1,4 +1,4 @@
-import { getToken } from "../auth/auth";
+import { getToken, removeToken } from "../auth/auth";
 const API_URL = import.meta.env.VITE_API_URL;
 
 async function request(endpoint, options = {}) {
@@ -21,7 +21,11 @@ async function request(endpoint, options = {}) {
   } catch {
     // Response has no JSON body.
   }
-
+  if (response.status === 401) {
+  removeToken();
+  window.location.href = "/login";
+  return;
+}
   if (!response.ok) {
     throw new Error(data?.detail || "Request failed");
   }
