@@ -1,5 +1,6 @@
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { isAuthenticated, removeToken } from "../auth/auth";
+import "./Navbar.css";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -12,11 +13,37 @@ function Navbar() {
   }
 
   return (
-    <nav>
-      <Link to="/">Papers</Link>{" "}
-      <Link to="/bookmarks">Bookmarks</Link>{" "}
-      <button onClick={handleLogout}>Logout</button>
-    </nav>
+    <nav className="navbar">
+  <div className="navbar-inner">
+    <Link to="/" className="navbar-brand">
+      Research Paper Assistant
+    </Link>
+
+    <div className="navbar-links">
+      <NavLink
+  to="/"
+  className={({ isActive }) =>
+    `navbar-link ${isActive ? "active" : ""}`
+  }
+>
+  Papers
+</NavLink>
+
+<NavLink
+  to="/bookmarks"
+  className={({ isActive }) =>
+    `navbar-link ${isActive ? "active" : ""}`
+  }
+>
+  Bookmarks
+</NavLink>
+
+      <button className="navbar-logout" onClick={handleLogout}>
+        Logout
+      </button>
+    </div>
+  </div>
+</nav>
   );
 }
 
