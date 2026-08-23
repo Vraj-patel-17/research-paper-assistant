@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { Link } from "react-router-dom";
-
+import "./Dashboard.css";
 function Dashboard() {
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,61 +88,83 @@ function Dashboard() {
   }
 
   return (
-    <div>
-      <h1>Research Papers</h1>
+  <div className="dashboard">
+    <div className="dashboard-header">
+      <h1 className="dashboard-title">Research Papers</h1>
+      <p className="dashboard-subtitle">
+        Discover and explore research papers.
+      </p>
 
-      <input
-            type="text"
-            placeholder="Search papers..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
+      <div className="dashboard-controls">
+        <input
+          className="dashboard-search"
+          type="text"
+          placeholder="Search papers..."
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
 
-      <select value={sort} onChange={handleSort}>
-        <option value="latest">Latest</option>
-        <option value="oldest">Oldest</option>
-        <option value="title">Title</option>
-      </select>
-      {loading && <p>Loading papers...</p>}
-      {papers.length === 0 ? (
-        <p>No papers found.</p>
-      ) : (
-        papers.map((paper) => (
-          <div key={paper.id}>
-            <h2>
+        <select
+          className="dashboard-sort"
+          value={sort}
+          onChange={handleSort}
+        >
+          <option value="latest">Latest</option>
+          <option value="oldest">Oldest</option>
+          <option value="title">Title</option>
+        </select>
+      </div>
+    </div>
+
+    {error && <p>Error: {error}</p>}
+
+    {loading && <p>Loading papers...</p>}
+
+    {!loading && papers.length === 0 && (
+      <p>No papers found.</p>
+    )}
+
+    {!loading && papers.length > 0 && (
+      <div className="paper-list">
+        {papers.map((paper) => (
+          <div className="paper-card" key={paper.id}>
+            <h2 className="paper-title">
               <Link to={`/papers/${paper.id}`}>
                 {paper.title}
               </Link>
             </h2>
 
-            <p>{paper.authors}</p>
-            <p>{paper.publication_date}</p>
-            <p>{paper.source}</p>
+            <div className="paper-meta">
+              <span>{paper.authors}</span>
+              <span>{paper.publication_date}</span>
+              <span>{paper.source}</span>
+            </div>
           </div>
-        ))
-      )}
-
-      <div>
-        <button
-          onClick={handlePrevious}
-          disabled={offset === 0}
-        >
-          Previous
-        </button>
-
-        <span>
-          {" "} Page {offset / limit + 1} {" "}
-        </span>
-
-        <button
-          onClick={handleNext}
-          disabled={!hasNext}
-        >
-          Next
-        </button>
+        ))}
       </div>
+    )}
+
+    <div className="pagination">
+      <button
+        onClick={handlePrevious}
+        disabled={offset === 0}
+      >
+        Previous
+      </button>
+
+      <span className="pagination-page">
+        Page {offset / limit + 1}
+      </span>
+
+      <button
+        onClick={handleNext}
+        disabled={!hasNext}
+      >
+        Next
+      </button>
     </div>
-  );
+  </div>
+);
 }
 
 export default Dashboard;
