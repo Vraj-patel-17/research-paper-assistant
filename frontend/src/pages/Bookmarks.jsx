@@ -58,7 +58,7 @@ function Bookmarks() {
 
   return (
     <div>
-      <h1>Bookmarks</h1>
+      <h1>Bookmarks ({papers.length})</h1>
 
       {papers.length === 0 ? (
         <p>You haven't bookmarked any papers yet.</p>
