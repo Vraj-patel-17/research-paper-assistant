@@ -96,13 +96,25 @@ function Dashboard() {
       </p>
 
       <div className="dashboard-controls">
-        <input
-          className="dashboard-search"
-          type="text"
-          placeholder="Search papers..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
+        <div className="search-wrapper">
+  <input
+    className="dashboard-search"
+    type="text"
+    placeholder="Search papers..."
+    value={search}
+    onChange={(event) => setSearch(event.target.value)}
+  />
+
+  {search && (
+    <button
+      className="search-clear"
+      onClick={() => setSearch("")}
+      aria-label="Clear search"
+    >
+      ×
+    </button>
+  )}
+</div>
 
         <select
           className="dashboard-sort"

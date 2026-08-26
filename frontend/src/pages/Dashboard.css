@@ -141,3 +141,30 @@
     width: 100%;
   }
 }
+.search-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search-wrapper .dashboard-search {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.search-clear:hover {
+  color: var(--text-h);
+}
