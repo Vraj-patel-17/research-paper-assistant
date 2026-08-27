@@ -1,0 +1,220 @@
+.paper-details {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  text-align: left;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
+.paper-header h1 {
+  margin: 0 0 12px;
+  color: var(--text-h);
+  font-size: 34px;
+  line-height: 1.2;
+}
+
+.paper-authors {
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.paper-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.abstract-section {
+  margin-top: 32px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.abstract-section h2 {
+  margin-bottom: 12px;
+}
+
+.abstract-section p {
+  line-height: 1.7;
+}
+
+.bookmark-button {
+  margin-top: 20px;
+  padding: 9px 16px;
+  border: 1px solid var(--accent-border);
+  border-radius: 7px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.bookmark-button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.bookmark-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Notes */
+
+.notes-section {
+  margin-top: 40px;
+  max-width: 700px;
+}
+
+.notes-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.notes-header h2 {
+  margin: 0;
+}
+
+.notes-header span {
+  min-width: 24px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 13px;
+  text-align: center;
+}
+
+.notepad {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.notepad textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+
+  background: transparent;
+  color: var(--text-h);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.notepad textarea::placeholder {
+  color: var(--text);
+}
+
+.notepad-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.notepad-footer button {
+  padding: 7px 13px;
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.notepad-footer button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.notepad-footer button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.notes-status {
+  margin-top: 16px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.saved-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.note-card {
+  position: relative;
+  padding: 14px 16px;
+  padding-right: 80px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.note-card p {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.delete-note {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.delete-note:hover {
+  color: #c0392b;
+}
+
+@media (max-width: 600px) {
+  .paper-details {
+    padding: 24px 16px 40px;
+  }
+
+  .paper-header h1 {
+    font-size: 28px;
+  }
+
+  .abstract-section {
+    padding: 18px;
+  }
+
+  .notes-section {
+    max-width: none;
+  }
+
+  .paper-info {
+    flex-direction: column;
+    gap: 6px;
+  }
+}

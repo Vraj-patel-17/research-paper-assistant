@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
-
+import "./PaperDetails.css";
 function PaperDetails() {
   const { paperId } = useParams();
 
@@ -114,29 +114,38 @@ async function handleDeleteNote(noteId) {
   }
 
   return (
-  <div>
-    <Link to="/">← Back to Papers</Link>
+  <div className="paper-details">
+    <Link to="/" className="back-link">
+      ← Back to Papers
+    </Link>
 
-    <h1>{paper.title}</h1>
+    <header className="paper-header">
+      <h1>{paper.title}</h1>
 
-    <p>{paper.authors}</p>
+      <p className="paper-authors">{paper.authors}</p>
 
-    <p>
-      <strong>Published:</strong> {paper.publication_date}
-    </p>
-
-    <p>
-      <strong>Source:</strong> {paper.source}
-    </p>
+      <div className="paper-info">
+        <span>
+          <strong>Published:</strong> {paper.publication_date}
+        </span>
+        <span>
+          <strong>Source:</strong> {paper.source}
+        </span>
+      </div>
+    </header>
 
     {paper.abstract && (
-      <div>
+      <section className="abstract-section">
         <h2>Abstract</h2>
         <p>{paper.abstract}</p>
-      </div>
+      </section>
     )}
 
-    <button onClick={handleBookmark} disabled={bookmarkLoading}>
+    <button
+      className="bookmark-button"
+      onClick={handleBookmark}
+      disabled={bookmarkLoading}
+    >
       {bookmarkLoading
         ? "Updating..."
         : isBookmarked
@@ -144,41 +153,53 @@ async function handleDeleteNote(noteId) {
           : "Bookmark"}
     </button>
 
-    <div>
-      <h2>Notes</h2>
+    <section className="notes-section">
+      <div className="notes-header">
+        <h2>📝 My Notes</h2>
+        <span>{notes.length}</span>
+      </div>
 
-      <textarea
-        placeholder="Write a note about this paper..."
-        value={noteContent}
-        onChange={(event) => setNoteContent(event.target.value)}
-        rows={4}
-      />
+      <div className="notepad">
+        <textarea
+          placeholder="Jot down something about this paper..."
+          value={noteContent}
+          onChange={(event) => setNoteContent(event.target.value)}
+          rows={4}
+        />
 
-      <br />
-
-      <button
-        onClick={handleAddNote}
-        disabled={noteSaving || !noteContent.trim()}
-      >
-        {noteSaving ? "Saving..." : "Add Note"}
-      </button>
+        <div className="notepad-footer">
+          <button
+            onClick={handleAddNote}
+            disabled={noteSaving || !noteContent.trim()}
+          >
+            {noteSaving ? "Saving..." : "Save Note"}
+          </button>
+        </div>
+      </div>
 
       {notesLoading ? (
-        <p>Loading notes...</p>
+        <p className="notes-status">Loading notes...</p>
       ) : notes.length === 0 ? (
-        <p>No notes yet.</p>
+        <p className="notes-status">
+          Your notes for this paper will appear here.
+        </p>
       ) : (
-        notes.map((note) => (
-          <div key={note.id}>
-            <p>{note.content}</p>
+        <div className="saved-notes">
+          {notes.map((note) => (
+            <div className="note-card" key={note.id}>
+              <p>{note.content}</p>
 
-            <button onClick={() => handleDeleteNote(note.id)}>
-              Delete
-            </button>
-          </div>
-        ))
+              <button
+                className="delete-note"
+                onClick={() => handleDeleteNote(note.id)}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
       )}
-    </div>
+    </section>
   </div>
 );}
 
