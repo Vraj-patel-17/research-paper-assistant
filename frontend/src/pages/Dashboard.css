@@ -1,115 +1,158 @@
 .dashboard {
+  box-sizing: border-box;
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 32px 24px 48px;
+  padding: 2rem 1.5rem 3rem;
   text-align: left;
 }
 
 .dashboard-header {
-  margin-bottom: 28px;
+  margin-bottom: 1.75rem;
 }
 
 .dashboard-title {
-  margin: 0 0 8px;
-  font-size: 32px;
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .dashboard-subtitle {
-  color: var(--text);
   margin: 0;
+  color: var(--text);
+  font-size: 1rem;
 }
-
 .dashboard-controls {
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.search-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-search,
+.dashboard-sort {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dashboard-search {
-  flex: 1;
-  min-width: 0;
-  padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--text-h);
+  width: 100%;
+  padding: 0.7rem 2.5rem 0.7rem 0.875rem;
   outline: none;
 }
 
-.dashboard-search:focus {
+.dashboard-search:focus-visible,
+.dashboard-sort:focus-visible {
   border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
 }
 
 .dashboard-sort {
-  padding: 11px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
+  padding: 0.7rem 0.75rem;
+  cursor: pointer;
+}
+
+.search-clear {
+  position: absolute;
+  right: 0.625rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.search-clear:hover {
   color: var(--text-h);
+}
+
+.search-clear:focus-visible {
+  outline: 2px solid var(--accent);
+  border-radius: 4px;
 }
 
 .paper-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .paper-card {
-  padding: 20px;
+  display: block;
+  padding: 1.25rem;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--bg);
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .paper-card:hover {
-  border-color: var(--accent-border);
+  border-color: var(--accent-border, var(--accent));
   box-shadow: var(--shadow);
+}
+.paper-card:hover .paper-title {
+  color: var(--accent);
 }
 
 .paper-title {
-  margin: 0 0 10px;
-  font-size: 19px;
-}
-
-.paper-title a {
+  margin: 0 0 0.625rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.4;
   color: var(--text-h);
-  text-decoration: none;
 }
 
-.paper-title a:hover {
-  color: var(--accent);
-}
 
 .paper-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
+  gap: 0.5rem 1rem;
   color: var(--text);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
-
 .pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  margin-top: 28px;
+  gap: 1rem;
+  margin-top: 1.75rem;
 }
 
 .pagination button {
-  padding: 8px 14px;
+  padding: 0.5rem 0.875rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--text-h);
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 7px;
-  background: var(--bg);
-  color: var(--text-h);
   cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.pagination button:hover:not(:disabled) {
+.pagination button:hover:not(:disabled),
+.pagination button:focus-visible:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -120,17 +163,16 @@
 }
 
 .pagination-page {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text);
 }
-
 @media (max-width: 600px) {
   .dashboard {
-    padding: 24px 16px 40px;
+    padding: 1.5rem 1rem 2.5rem;
   }
 
   .dashboard-title {
-    font-size: 28px;
+    font-size: 1.75rem;
   }
 
   .dashboard-controls {
@@ -140,31 +182,4 @@
   .dashboard-sort {
     width: 100%;
   }
-}
-.search-wrapper {
-  position: relative;
-  flex: 1;
-}
-
-.search-wrapper .dashboard-search {
-  width: 100%;
-  padding-right: 40px;
-}
-
-.search-clear {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-
-  border: none;
-  background: transparent;
-  color: var(--text);
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.search-clear:hover {
-  color: var(--text-h);
 }
