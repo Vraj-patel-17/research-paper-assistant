@@ -13,6 +13,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  position: relative;
 }
 
 .navbar-brand {
@@ -48,6 +49,36 @@
   background: var(--accent-bg);
 }
 
+.navbar-link.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+/* Hamburger toggle — hidden on desktop */
+.navbar-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+
+  border: none;
+  background: transparent;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.navbar-toggle:hover {
+  background: var(--accent-bg);
+}
+
+.navbar-toggle-bar {
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+}
+
 @media (max-width: 600px) {
   .navbar-inner {
     padding: 0 16px;
@@ -57,17 +88,35 @@
     font-size: 16px;
   }
 
+  .navbar-toggle {
+    display: flex;
+  }
+
   .navbar-links {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
     gap: 2px;
+
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px 16px;
+  }
+
+  .navbar-links.open {
+    display: flex;
   }
 
   .navbar-link,
   .navbar-logout {
-    padding: 7px 8px;
+    width: 100%;
+    text-align: left;
+    padding: 10px 8px;
     font-size: 14px;
   }
-}
-.navbar-link.active {
-  color: var(--accent);
-  background: var(--accent-bg);
 }
