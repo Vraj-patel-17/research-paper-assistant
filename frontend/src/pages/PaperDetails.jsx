@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import { Bookmark } from "lucide-react";
 import "./PaperDetails.css";
 function PaperDetails() {
   const { paperId } = useParams();
@@ -142,15 +143,25 @@ async function handleDeleteNote(noteId) {
     )}
 
     <button
-      className="bookmark-button"
+      type="button"
+      className={`bookmark-toggle ${isBookmarked ? "is-active" : ""}`}
       onClick={handleBookmark}
       disabled={bookmarkLoading}
+      aria-pressed={isBookmarked}
+      aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+      title={
+          bookmarkLoading
+            ? "Updating..."
+            : isBookmarked
+              ? "Remove bookmark"
+              : "Add bookmark"
+        }
     >
-      {bookmarkLoading
-        ? "Updating..."
-        : isBookmarked
-          ? "Remove Bookmark"
-          : "Bookmark"}
+     <Bookmark
+          size={22}
+          fill={isBookmarked ? "currentColor" : "none"}
+          strokeWidth={2}
+        />
     </button>
 
     <section className="notes-section">

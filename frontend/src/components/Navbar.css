@@ -54,7 +54,6 @@
   background: var(--accent-bg);
 }
 
-/* Hamburger toggle — hidden on desktop */
 .navbar-toggle {
   display: none;
   flex-direction: column;

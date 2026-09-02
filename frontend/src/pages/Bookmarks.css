@@ -124,3 +124,26 @@
     width: 100%;
   }
 }
+.bookmark-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: #999;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.bookmark-toggle:hover {
+  transform: scale(1.1);
+}
+
+.bookmark-toggle.is-active {
+  color: #f5a623;
+}
+
+.bookmark-toggle:not(.is-active) {
+  color: #bbb;
+}
