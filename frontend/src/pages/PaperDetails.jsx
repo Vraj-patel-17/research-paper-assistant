@@ -141,7 +141,16 @@ async function handleDeleteNote(noteId) {
         <p>{paper.abstract}</p>
       </section>
     )}
-
+    {paper.pdf_url && (
+    <a
+      href={paper.pdf_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="read-paper-button"
+    >
+      Read Full Paper ↗
+    </a>
+  )}
     <button
       type="button"
       className={`bookmark-toggle ${isBookmarked ? "is-active" : ""}`}
