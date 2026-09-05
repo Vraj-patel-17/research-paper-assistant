@@ -247,3 +247,26 @@
 .bookmark-toggle:not(.is-active) {
   color: #bbb;
 }
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title-row h1 {
+  margin: 0;
+}
+
+.title-row .bookmark-toggle {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  display: flex;
+  align-items: center;
+}
+
+.title-row .bookmark-toggle.is-active {
+  color: #1da8e4;
+}

@@ -141,7 +141,7 @@
 }
 
 .bookmark-toggle.is-active {
-  color: #f5a623;
+  color: #1da8e4;
 }
 
 .bookmark-toggle:not(.is-active) {

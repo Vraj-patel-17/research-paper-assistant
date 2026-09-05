@@ -7,5 +7,3 @@ from .topic import Topic
 from .paper_topic import PaperTopic
 from .note import Note
 from .summary import Summary
-from .paper_content import PaperContent
-from .paperchunk import PaperChunk

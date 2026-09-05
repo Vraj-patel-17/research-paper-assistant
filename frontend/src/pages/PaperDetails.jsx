@@ -121,8 +121,30 @@ async function handleDeleteNote(noteId) {
     </Link>
 
     <header className="paper-header">
+      <div className="title-row">
       <h1>{paper.title}</h1>
-
+      <button
+      type="button"
+      className={`bookmark-toggle ${isBookmarked ? "is-active" : ""}`}
+      onClick={handleBookmark}
+      disabled={bookmarkLoading}
+      aria-pressed={isBookmarked}
+      aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+      title={
+          bookmarkLoading
+            ? "Updating..."
+            : isBookmarked
+              ? "Remove bookmark"
+              : "Add bookmark"
+        }
+    >
+     <Bookmark
+          size={22}
+          fill={isBookmarked ? "currentColor" : "none"}
+          strokeWidth={2}
+        />
+    </button>
+    </div>
       <p className="paper-authors">{paper.authors}</p>
 
       <div className="paper-info">
@@ -151,27 +173,7 @@ async function handleDeleteNote(noteId) {
       Read Full Paper ↗
     </a>
   )}
-    <button
-      type="button"
-      className={`bookmark-toggle ${isBookmarked ? "is-active" : ""}`}
-      onClick={handleBookmark}
-      disabled={bookmarkLoading}
-      aria-pressed={isBookmarked}
-      aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-      title={
-          bookmarkLoading
-            ? "Updating..."
-            : isBookmarked
-              ? "Remove bookmark"
-              : "Add bookmark"
-        }
-    >
-     <Bookmark
-          size={22}
-          fill={isBookmarked ? "currentColor" : "none"}
-          strokeWidth={2}
-        />
-    </button>
+    
 
     <section className="notes-section">
       <div className="notes-header">
