@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { Bookmark } from "lucide-react";
 import "./PaperDetails.css";
+
 function PaperDetails() {
   const { paperId } = useParams();
 
@@ -15,33 +16,34 @@ function PaperDetails() {
   const [noteContent, setNoteContent] = useState("");
   const [notesLoading, setNotesLoading] = useState(true);
   const [noteSaving, setNoteSaving] = useState(false);
+
   useEffect(() => {
-  async function loadPaper() {
-    try {
-      const [paperData, bookmarks, notesData] = await Promise.all([
-        api.get(`/papers/${paperId}`),
-        api.get("/bookmarks"),
-        api.get(`/papers/${paperId}/notes`),
-      ]);
+    async function loadPaper() {
+      try {
+        const [paperData, bookmarks, notesData] = await Promise.all([
+          api.get(`/papers/${paperId}`),
+          api.get("/bookmarks"),
+          api.get(`/papers/${paperId}/notes`),
+        ]);
 
-      setPaper(paperData);
-      setNotes(notesData);
+        setPaper(paperData);
+        setNotes(notesData);
 
-      const bookmarked = bookmarks.some(
-        (bookmark) => bookmark.paper_id === Number(paperId)
-      );
+        const bookmarked = bookmarks.some(
+          (bookmark) => bookmark.paper_id === Number(paperId)
+        );
 
-      setIsBookmarked(bookmarked);
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-      setNotesLoading(false);
+        setIsBookmarked(bookmarked);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+        setNotesLoading(false);
+      }
     }
-  }
 
-  loadPaper();
-}, [paperId]);
+    loadPaper();
+  }, [paperId]);
 
   async function handleBookmark() {
     setBookmarkLoading(true);
@@ -61,42 +63,44 @@ function PaperDetails() {
       setBookmarkLoading(false);
     }
   }
+
   async function handleAddNote() {
-  const content = noteContent.trim();
+    const content = noteContent.trim();
 
-  if (!content) {
-    return;
+    if (!content) {
+      return;
+    }
+
+    setNoteSaving(true);
+    setError("");
+
+    try {
+      const newNote = await api.post(`/papers/${paperId}/notes`, { content });
+
+      setNotes((current) => [...current, newNote]);
+      setNoteContent("");
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setNoteSaving(false);
+    }
   }
 
-  setNoteSaving(true);
-  setError("");
+  async function handleDeleteNote(noteId) {
+    try {
+      await api.delete(`/papers/notes/${noteId}`);
 
-  try {
-    const newNote = await api.post(
-      `/papers/${paperId}/notes`,
-      { content }
-    );
-
-    setNotes((current) => [...current, newNote]);
-    setNoteContent("");
-  } catch (error) {
-    setError(error.message);
-  } finally {
-    setNoteSaving(false);
+      setNotes((current) => current.filter((note) => note.id !== noteId));
+    } catch (error) {
+      setError(error.message);
+    }
   }
-}
 
-async function handleDeleteNote(noteId) {
-  try {
-    await api.delete(`/papers/notes/${noteId}`);
+  const getPdfEmbedUrl = (url) => {
+    if (!url) return null;
+    return url.replace("/abs/", "/pdf/");
+  };
 
-    setNotes((current) =>
-      current.filter((note) => note.id !== noteId)
-    );
-  } catch (error) {
-    setError(error.message);
-  }
-}
   if (loading) {
     return <p>Loading paper...</p>;
   }
@@ -115,114 +119,129 @@ async function handleDeleteNote(noteId) {
   }
 
   return (
-  <div className="paper-details">
-    <Link to="/" className="back-link">
-      ← Back to Papers
-    </Link>
+    <div className="paper-details">
+      <Link to="/" className="back-link">
+        ← Back to Papers
+      </Link>
 
-    <header className="paper-header">
-      <div className="title-row">
-      <h1>{paper.title}</h1>
-      <button
-      type="button"
-      className={`bookmark-toggle ${isBookmarked ? "is-active" : ""}`}
-      onClick={handleBookmark}
-      disabled={bookmarkLoading}
-      aria-pressed={isBookmarked}
-      aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-      title={
-          bookmarkLoading
-            ? "Updating..."
-            : isBookmarked
-              ? "Remove bookmark"
-              : "Add bookmark"
-        }
-    >
-     <Bookmark
-          size={22}
-          fill={isBookmarked ? "currentColor" : "none"}
-          strokeWidth={2}
-        />
-    </button>
-    </div>
-      <p className="paper-authors">{paper.authors}</p>
-
-      <div className="paper-info">
-        <span>
-          <strong>Published:</strong> {paper.publication_date}
-        </span>
-        <span>
-          <strong>Source:</strong> {paper.source}
-        </span>
-      </div>
-    </header>
-
-    {paper.abstract && (
-      <section className="abstract-section">
-        <h2>Abstract</h2>
-        <p>{paper.abstract}</p>
-      </section>
-    )}
-    {paper.pdf_url && (
-    <a
-      href={paper.pdf_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="read-paper-button"
-    >
-      Read Full Paper ↗
-    </a>
-  )}
-    
-
-    <section className="notes-section">
-      <div className="notes-header">
-        <h2>📝 My Notes</h2>
-        <span>{notes.length}</span>
-      </div>
-
-      <div className="notepad">
-        <textarea
-          placeholder="Jot down something about this paper..."
-          value={noteContent}
-          onChange={(event) => setNoteContent(event.target.value)}
-          rows={4}
-        />
-
-        <div className="notepad-footer">
+      <header className="paper-header">
+        <div className="title-row">
+          <h1>{paper.title}</h1>
           <button
-            onClick={handleAddNote}
-            disabled={noteSaving || !noteContent.trim()}
+            type="button"
+            className={`bookmark-toggle ${isBookmarked ? "is-active" : ""}`}
+            onClick={handleBookmark}
+            disabled={bookmarkLoading}
+            aria-pressed={isBookmarked}
+            aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+            title={
+              bookmarkLoading
+                ? "Updating..."
+                : isBookmarked
+                  ? "Remove bookmark"
+                  : "Add bookmark"
+            }
           >
-            {noteSaving ? "Saving..." : "Save Note"}
+            <Bookmark
+              size={22}
+              fill={isBookmarked ? "currentColor" : "none"}
+              strokeWidth={2}
+            />
           </button>
         </div>
-      </div>
+        <p className="paper-authors">{paper.authors}</p>
 
-      {notesLoading ? (
-        <p className="notes-status">Loading notes...</p>
-      ) : notes.length === 0 ? (
-        <p className="notes-status">
-          Your notes for this paper will appear here.
-        </p>
-      ) : (
-        <div className="saved-notes">
-          {notes.map((note) => (
-            <div className="note-card" key={note.id}>
-              <p>{note.content}</p>
-
-              <button
-                className="delete-note"
-                onClick={() => handleDeleteNote(note.id)}
-              >
-                Delete
-              </button>
-            </div>
-          ))}
+        <div className="paper-info">
+          <span>
+            <strong>Published:</strong> {paper.publication_date}
+          </span>
+          <span>
+            <strong>Source:</strong> {paper.source}
+          </span>
         </div>
+      </header>
+
+      {paper.abstract && (
+        <section className="abstract-section">
+          <h2>Abstract</h2>
+          <p>{paper.abstract}</p>
+        </section>
       )}
-    </section>
-  </div>
-);}
+
+      {paper.pdf_url && (
+        <section className="pdf-section">
+          <div className="pdf-section-header">
+            <h2>Paper</h2>
+            <a
+              href={paper.pdf_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="read-paper-button"
+            >
+              Open in new tab ↗
+            </a>
+          </div>
+
+          <div className="pdf-frame-wrapper">
+            <iframe
+              src={getPdfEmbedUrl(paper.pdf_url)}
+              title={`${paper.title} PDF`}
+              className="pdf-frame"
+              loading="lazy"
+            />
+          </div>
+        </section>
+      )}
+
+      <section className="notes-section">
+        <div className="notes-header">
+          <h2>📝 My Notes</h2>
+          <span>{notes.length}</span>
+        </div>
+
+        <div className="notepad">
+          <textarea
+            placeholder="Jot down something about this paper..."
+            value={noteContent}
+            onChange={(event) => setNoteContent(event.target.value)}
+            rows={4}
+          />
+
+          <div className="notepad-footer">
+            <button
+              onClick={handleAddNote}
+              disabled={noteSaving || !noteContent.trim()}
+            >
+              {noteSaving ? "Saving..." : "Save Note"}
+            </button>
+          </div>
+        </div>
+
+        {notesLoading ? (
+          <p className="notes-status">Loading notes...</p>
+        ) : notes.length === 0 ? (
+          <p className="notes-status">
+            Your notes for this paper will appear here.
+          </p>
+        ) : (
+          <div className="saved-notes">
+            {notes.map((note) => (
+              <div className="note-card" key={note.id}>
+                <p>{note.content}</p>
+
+                <button
+                  className="delete-note"
+                  onClick={() => handleDeleteNote(note.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
 
 export default PaperDetails;

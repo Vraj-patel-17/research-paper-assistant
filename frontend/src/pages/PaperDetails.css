@@ -270,3 +270,22 @@
 .title-row .bookmark-toggle.is-active {
   color: #1da8e4;
 }
+.pdf-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pdf-frame-wrapper {
+  width: 100%;
+  height: 80vh; 
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pdf-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
