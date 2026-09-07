@@ -22,7 +22,6 @@ def build_summary_prompt(title: str, full_text: str) -> str:
 
     Return only the summary.
     """
-@staticmethod
 def build_chat_prompt(question:str,context:str) ->str:
     return f"""
     You are an expert AI research assistant.

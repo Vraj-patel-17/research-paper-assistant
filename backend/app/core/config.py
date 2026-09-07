@@ -26,7 +26,8 @@ class Settings(BaseSettings):
     # Chunking
     chunk_size: int = Field(default=250, gt=0)
     chunk_overlap: int = Field(default=50, ge=0)
-
+    PDF_TIMEOUT : int = 30
+    SUMMARY_MAX_WORDS: int=200
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
         env_file_encoding="utf-8",

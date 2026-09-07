@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from app.models.paper_topic import PaperTopic
     from app.models.topic import Topic
     from app.models.note import Note
-    from app.models.summary import Summary
 class Paper(Base):
     __tablename__="papers"
     __table_args__ = (
@@ -38,7 +37,5 @@ class Paper(Base):
     notes: Mapped[list["Note"]] = relationship(
     back_populates="paper",
     cascade="all, delete-orphan",)
-    summaries: Mapped[list["Summary"]] = relationship(
-    back_populates="paper",
-    cascade="all, delete-orphan",)
+    
     
