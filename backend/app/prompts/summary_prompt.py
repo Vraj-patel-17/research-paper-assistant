@@ -1,5 +1,7 @@
 from app.core.config import settings
+MAX_CHARS = 20000 
 def build_summary_prompt(title: str, full_text: str) -> str:
+    full_text = full_text[:MAX_CHARS]
     return f"""
     You are an expert research assistant.
 

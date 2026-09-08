@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { Bookmark } from "lucide-react";
 import "./PaperDetails.css";
+import PaperSummary from '../components/PaperSummary';
 
 function PaperDetails() {
   const { paperId } = useParams();
@@ -192,7 +193,7 @@ function PaperDetails() {
           </div>
         </section>
       )}
-
+        <PaperSummary paperId={paper.id} />
       <section className="notes-section">
         <div className="notes-header">
           <h2>📝 My Notes</h2>

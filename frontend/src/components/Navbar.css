@@ -54,6 +54,7 @@
   background: var(--accent-bg);
 }
 
+
 .navbar-toggle {
   display: none;
   flex-direction: column;
