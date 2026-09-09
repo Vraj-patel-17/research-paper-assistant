@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api/client.js';
-
+import './PaperSummary.css';
 function PaperSummary({ paperId }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -33,10 +33,11 @@ function PaperSummary({ paperId }) {
   }
 
   return (
-    <div className="paper-summary">
-      <p className="summary-text">{summary}</p>
-    </div>
-  );
+  <section className="paper-summary">
+    <h2>Summary</h2>
+    <p className="summary-text">{summary}</p>
+  </section>
+);
 }
 
 export default PaperSummary;
