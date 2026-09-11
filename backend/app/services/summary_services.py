@@ -44,3 +44,45 @@ def generate_paper_summary(
     db.commit()
     db.refresh(paper_summary)
     return paper_summary.summary
+
+def regenerate_paper_summary(
+    db: Session,
+    paper_id: UUID,
+) -> str:
+    paper = get_paper_by_id(db, paper_id)
+
+    if not paper:
+        raise LookupError("Paper not found")
+
+    if not paper.pdf_url:
+        raise ValueError("Paper does not have a PDF URL")
+
+    full_text = pdf_service.extract_from_url(paper.pdf_url)
+
+    prompt = build_summary_prompt(
+        title=paper.title,
+        full_text=full_text,
+    )
+
+    llm_client = LLMClient()
+    summary_text = llm_client.generate_text(prompt)
+
+    existing_summary = db.execute(
+        select(PaperSummary).where(
+            PaperSummary.paper_id == paper_id
+        )
+    ).scalar_one_or_none()
+
+    if existing_summary:
+        existing_summary.summary = summary_text
+    else:
+        existing_summary = PaperSummary(
+            paper_id=paper_id,
+            summary=summary_text,
+        )
+        db.add(existing_summary)
+
+    db.commit()
+    db.refresh(existing_summary)
+
+    return existing_summary.summary
