@@ -32,12 +32,37 @@ function PaperSummary({ paperId }) {
     );
   }
 
-  return (
-  <section className="paper-summary">
-    <h2>Summary</h2>
-    <p className="summary-text">{summary}</p>
-  </section>
-);
-}
+  
+  const regenerateSummary = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await api.post(`/papers/${paperId}/summary/regenerate`);
+      setSummary(data.summary);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+    return (
+    <section className="paper-summary">
+      <div className="summary-header">
+        <h2>Summary</h2>
+
+        <button
+          onClick={regenerateSummary}
+          className="summary-regenerate-btn"
+          disabled={loading}
+        >
+          Regenerate
+        </button>
+      </div>
+
+      <p className="summary-text">{summary}</p>
+    </section>
+  );
+  }
 
 export default PaperSummary;
