@@ -1,4 +1,3 @@
-from google import genai
 from app.exceptions.llm_exceptions import LLMGenerationError
 from app.core.config import settings
 from app.core.logging import get_logger

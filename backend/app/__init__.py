@@ -5,3 +5,4 @@ from app.models.collection import Collection
 from app.models.collection_paper import CollectionPaper
 from app.models.topic import Topic
 from app.models.paper_topic import PaperTopic
+from app.models.paper_summary import PaperSummary

@@ -9,6 +9,11 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine,text
 from sqlalchemy.orm import sessionmaker
+import sys
+print("PYTHON PATH:", sys.path)
+import app
+print("APP:", app.__file__)
+print("APP PATH:", app.__path__)
 from app.database import Base, get_db
 from app.main import app
 from app.models.user import User
