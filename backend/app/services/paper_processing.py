@@ -3,7 +3,7 @@ import io
 import httpx
 from pypdf import PdfReader
 
-from app.exceptions import (
+from app.exceptions.pdf_exceptions import (
     PDFDownloadError,
     PDFExtractionError,
     EmptyPDFError,
