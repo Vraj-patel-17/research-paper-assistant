@@ -6,6 +6,8 @@ from app.routes.summary import router as summary_router
 from app.core.logging import setup_logging
 from app.routes import recommendation_route
 from app.routes import health
+from app.routes.rag import router as rag_router
+
 from app.core.exception_handlers import register_exception_handlers
 from fastapi.middleware.cors import CORSMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
@@ -42,6 +44,7 @@ app.include_router(ingestion_router)
 app.include_router(topic.router)
 app.include_router(note_router)
 app.include_router(summary_router)
+app.include_router(rag_router)
 app.include_router(recommendation_route.router)
 
 
