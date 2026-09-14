@@ -9,7 +9,7 @@ const MIN_QUERY_LENGTH = 2;
 function Dashboard() {
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [fetching, setFetching] = useState(false); 
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState("");
 
   const [offset, setOffset] = useState(0);
@@ -22,7 +22,7 @@ function Dashboard() {
 
   const requestId = useRef(0);
 
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       const value = search.trim();
@@ -56,7 +56,6 @@ function Dashboard() {
 
         const data = await api.get(`/papers?${params.toString()}`);
 
-        // Ignore results from a superseded request
         if (id !== requestId.current) return;
 
         setPapers(data.items);
@@ -90,8 +89,7 @@ function Dashboard() {
 
   function handleRetry() {
     setError("");
-    setOffset((prev) => prev); // no-op trigger; see note below
-    // simplest reliable retry: bump requestId-independent state
+    setOffset((prev) => prev); 
     setSort((prev) => prev);
   }
 
@@ -181,17 +179,17 @@ function Dashboard() {
                 <span>
                   {paper.publication_date
                     ? new Date(paper.publication_date).toLocaleDateString(
-                        undefined,
-                        { year: "numeric", month: "short", day: "numeric" }
-                      )
+                      undefined,
+                      { year: "numeric", month: "short", day: "numeric" }
+                    )
                     : "—"}
                 </span>
                 <span>{paper.source}</span>
-                </div>
-                </Link>
-            
+              </div>
+            </Link>
+
           ))}
-          </div>
+        </div>
       )}
 
       {!loading && papers.length > 0 && (

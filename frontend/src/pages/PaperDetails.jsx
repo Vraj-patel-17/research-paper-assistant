@@ -193,7 +193,7 @@ function PaperDetails() {
           </div>
         </section>
       )}
-        <PaperSummary paperId={paper.id} />
+      <PaperSummary paperId={paper.id} />
       <section className="notes-section">
         <div className="notes-header">
           <h2>📝 My Notes</h2>
