@@ -2,6 +2,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy.engine.url import make_url
 
 from alembic import context
 from dotenv import load_dotenv
@@ -16,9 +17,19 @@ load_dotenv()
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Alembic's migration runner uses a synchronous engine (engine_from_config
+# + connectable.connect() below), but DATABASE_URL is the app's async URL
+# (postgresql+asyncpg://...). asyncpg can't be loaded into a sync engine,
+# so we derive a sync-compatible URL here by dropping the async driver —
+# this falls back to psycopg2 (already a dependency), used for migrations
+# only. The app itself keeps using the async URL unchanged.
+raw_url = os.getenv("DATABASE_URL")
+sync_url = make_url(raw_url).set(drivername="postgresql+psycopg2")
+
 config.set_main_option(
     "sqlalchemy.url",
-    os.getenv("DATABASE_URL")
+    sync_url.render_as_string(hide_password=False)
 )
 
 # Interpret the config file for Python logging.

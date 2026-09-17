@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Path
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.note import NoteCreate, NoteResponse,NoteUpdate
 from app.services.note_service import NoteService
@@ -8,9 +8,9 @@ from app.models.user import User
 from uuid import UUID
 router = APIRouter(prefix="/papers",tags=["Notes"],)
 @router.post("/{paper_id}/notes",response_model=NoteResponse,)
-def note(note_data:NoteCreate,paper_id:UUID,db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
+async def note(note_data:NoteCreate,paper_id:UUID,db:AsyncSession=Depends(get_db),current_user:User=Depends(get_current_user)):
     service = NoteService(db)
-    note = service.create_note(
+    note = await service.create_note(
     user_id=current_user.id,
     paper_id=paper_id,
     content=note_data.content)
@@ -21,14 +21,14 @@ def note(note_data:NoteCreate,paper_id:UUID,db:Session=Depends(get_db),current_u
     "/{paper_id}/notes",
     response_model=list[NoteResponse],
 )
-def get_notes(
+async def get_notes(
     paper_id: UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     service = NoteService(db)
 
-    return service.get_notes_for_paper(
+    return await service.get_notes_for_paper(
         paper_id=paper_id,
         user_id=current_user.id,
     )
@@ -36,15 +36,15 @@ def get_notes(
     "/notes/{note_id}",
     response_model=NoteResponse,
 )
-def update_note(
+async def update_note(
     note_data: NoteUpdate,
     note_id: UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     service = NoteService(db)
 
-    note = service.update_note(
+    note = await service.update_note(
         note_id=note_id,
         user_id=current_user.id,
         content=note_data.content,
@@ -59,14 +59,14 @@ def update_note(
     return note
 
 @router.delete("/notes/{note_id}", status_code=204)
-def delete_note(
+async def delete_note(
     note_id:UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     service = NoteService(db)
 
-    deleted = service.delete_note(
+    deleted = await service.delete_note(
         note_id=note_id,
         user_id=current_user.id,
     )

@@ -1,55 +1,70 @@
-from sqlalchemy import func, desc
-from sqlalchemy.orm import Session,selectinload
+from sqlalchemy import func, desc, select
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.paper import Paper
 from app.models.paper_topic import PaperTopic
 from app.services.paper_services import get_paper_by_id
 from app.schemas.recommendation import RecommendationResponse
 from app.core.logging import get_logger
 logger = get_logger(__name__)
+
 class RecommendationService:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
-    
-    def get_recommendations(
-    self,
-    paper_id: int,
-    limit: int = 10) -> list[RecommendationResponse]:
+
+    async def get_recommendations(self, paper_id, limit: int = 10) -> list[RecommendationResponse]:
         try:
             logger.info("Generating recommendations for paper %s", paper_id)
-            paper = get_paper_by_id(self.db,paper_id)
-            topic_ids = (self.db.query(PaperTopic.topic_id).filter(PaperTopic.paper_id == paper_id).all())
-            topic_ids = [topic_id for (topic_id,) in topic_ids]
+            paper = await get_paper_by_id(self.db, paper_id)
+            if not paper:
+                return []
+
+            topic_ids_result = await self.db.execute(
+                select(PaperTopic.topic_id).where(PaperTopic.paper_id == paper_id)
+            )
+            topic_ids = [topic_id for (topic_id,) in topic_ids_result.all()]
             if not topic_ids:
                 return []
-            current_topics = (
-            self.db.query(PaperTopic).options(selectinload(PaperTopic.topic))
-            .filter(PaperTopic.paper_id == paper_id)
-            .all())
 
+            current_topics_result = await self.db.execute(
+                select(PaperTopic)
+                .options(selectinload(PaperTopic.topic))
+                .where(PaperTopic.paper_id == paper_id)
+            )
+            current_topics = current_topics_result.scalars().all()
             current_topic_map = {topic.topic_id: topic.topic.name for topic in current_topics}
-            recommendations = (
-            self.db.query(Paper).options(
-            selectinload(Paper.paper_topics)
-            .selectinload(PaperTopic.topic))
-            .join(PaperTopic, Paper.id == PaperTopic.paper_id)
-            .filter(
-                PaperTopic.topic_id.in_(topic_ids),
-                Paper.id != paper_id,
+
+            recommendations_result = await self.db.execute(
+                select(Paper)
+                .options(selectinload(Paper.paper_topics).selectinload(PaperTopic.topic))
+                .join(PaperTopic, Paper.id == PaperTopic.paper_id)
+                .where(
+                    PaperTopic.topic_id.in_(topic_ids),
+                    Paper.id != paper_id,
+                )
+                .group_by(Paper.id)
+                .order_by(
+                    desc(func.count(PaperTopic.topic_id)),
+                    desc(Paper.publication_date),
+                )
+                .limit(limit)
             )
-            .group_by(Paper.id)
-            .order_by(
-                desc(func.count(PaperTopic.topic_id)),
-                desc(Paper.publication_date),
-            )
-            .limit(limit)
-            .all())
-            response=[]
-            for paper in recommendations:
-                shared_topics=[]
-                for paper_topic in paper.paper_topics:
+            recommendations = recommendations_result.scalars().all()
+
+            response = []
+            for rec_paper in recommendations:
+                shared_topics = []
+                for paper_topic in rec_paper.paper_topics:
                     if paper_topic.topic_id in current_topic_map:
-                        shared_topics.append(current_topic_map[paper_topic.topic_id ])
-                response.append(RecommendationResponse(paper=paper,shared_topics=shared_topics,shared_topic_count=len(shared_topics),reason=f"Shares {len(shared_topics)} topic(s) with the current paper."))
+                        shared_topics.append(current_topic_map[paper_topic.topic_id])
+                response.append(
+                    RecommendationResponse(
+                        paper=rec_paper,
+                        shared_topics=shared_topics,
+                        shared_topic_count=len(shared_topics),
+                        reason=f"Shares {len(shared_topics)} topic(s) with the current paper.",
+                    )
+                )
             logger.debug("Found %d candidate recommendations", len(response))
             return response
         except Exception:
@@ -58,4 +73,3 @@ class RecommendationService:
                 paper_id,
             )
             raise
-       

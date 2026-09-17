@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+import asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID
 
@@ -8,26 +9,28 @@ from app.services.llm_client import LLMClient
 from app.prompts.summary_prompt import build_summary_prompt
 from app.models.paper_summary import PaperSummary
 
-def generate_paper_summary(
-    db: Session,
+async def generate_paper_summary(
+    db: AsyncSession,
     paper_id: UUID,
 ) -> str:
 
-    paper = get_paper_by_id(db, paper_id)
+    paper = await get_paper_by_id(db, paper_id)
 
     if not paper:
         raise LookupError("Paper not found")
     if not paper.pdf_url:
         raise ValueError("Paper does not have a PDF URL")
-    existing_summary = db.execute(
-    select(PaperSummary).where(
-        PaperSummary.paper_id == paper_id
-    )   ).scalar_one_or_none()
+
+    existing_summary = (
+        await db.execute(select(PaperSummary).where(PaperSummary.paper_id == paper_id))
+    ).scalar_one_or_none()
 
     if existing_summary:
         return existing_summary.summary
 
-    full_text = pdf_service.extract_from_url(paper.pdf_url)
+    # pdf_service does blocking I/O (httpx.get + PyMuPDF parsing) —
+    # offload to a thread so it doesn't stall the event loop.
+    full_text = await asyncio.to_thread(pdf_service.extract_from_url, paper.pdf_url)
 
     prompt = build_summary_prompt(
         title=paper.title,
@@ -35,21 +38,22 @@ def generate_paper_summary(
     )
 
     llm_client = LLMClient()
-    summary_text = llm_client.generate_text(prompt)
-    paper_summary=PaperSummary(
+    summary_text = await llm_client.generate_text(prompt)
+
+    paper_summary = PaperSummary(
         paper_id=paper_id,
-        summary=summary_text
+        summary=summary_text,
     )
     db.add(paper_summary)
-    db.commit()
-    db.refresh(paper_summary)
+    await db.commit()
+    await db.refresh(paper_summary)
     return paper_summary.summary
 
-def regenerate_paper_summary(
-    db: Session,
+async def regenerate_paper_summary(
+    db: AsyncSession,
     paper_id: UUID,
 ) -> str:
-    paper = get_paper_by_id(db, paper_id)
+    paper = await get_paper_by_id(db, paper_id)
 
     if not paper:
         raise LookupError("Paper not found")
@@ -57,7 +61,7 @@ def regenerate_paper_summary(
     if not paper.pdf_url:
         raise ValueError("Paper does not have a PDF URL")
 
-    full_text = pdf_service.extract_from_url(paper.pdf_url)
+    full_text = await asyncio.to_thread(pdf_service.extract_from_url, paper.pdf_url)
 
     prompt = build_summary_prompt(
         title=paper.title,
@@ -65,12 +69,10 @@ def regenerate_paper_summary(
     )
 
     llm_client = LLMClient()
-    summary_text = llm_client.generate_text(prompt)
+    summary_text = await llm_client.generate_text(prompt)
 
-    existing_summary = db.execute(
-        select(PaperSummary).where(
-            PaperSummary.paper_id == paper_id
-        )
+    existing_summary = (
+        await db.execute(select(PaperSummary).where(PaperSummary.paper_id == paper_id))
     ).scalar_one_or_none()
 
     if existing_summary:
@@ -82,7 +84,7 @@ def regenerate_paper_summary(
         )
         db.add(existing_summary)
 
-    db.commit()
-    db.refresh(existing_summary)
+    await db.commit()
+    await db.refresh(existing_summary)
 
     return existing_summary.summary

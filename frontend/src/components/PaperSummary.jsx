@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api/client.js';
 import './PaperSummary.css';
+
 function PaperSummary({ paperId }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -11,7 +12,7 @@ function PaperSummary({ paperId }) {
     setError(null);
     try {
       const data = await api.get(`/papers/${paperId}/summary`);
-      setSummary(data.summary); // adjust based on your SummaryResponse shape
+      setSummary(data.summary);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -19,24 +20,9 @@ function PaperSummary({ paperId }) {
     }
   };
 
-  if (!summary && !loading) {
-    return <button onClick={fetchSummary} className="summary-btn">Summarize Paper</button>;
-  }
-  if (loading) return <div className="summary-loading">Generating summary...</div>;
-  if (error) {
-    return (
-      <div className="summary-error">
-        {error}
-        <button onClick={fetchSummary}>Retry</button>
-      </div>
-    );
-  }
-
-  
   const regenerateSummary = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const data = await api.post(`/papers/${paperId}/summary/regenerate`);
       setSummary(data.summary);
@@ -46,23 +32,44 @@ function PaperSummary({ paperId }) {
       setLoading(false);
     }
   };
-    return (
+
+  const retry = summary ? regenerateSummary : fetchSummary;
+
+  return (
     <section className="paper-summary">
       <div className="summary-header">
         <h2>Summary</h2>
-
-        <button
-          onClick={regenerateSummary}
-          className="summary-regenerate-btn"
-          disabled={loading}
-        >
-          Regenerate
-        </button>
+        {summary && (
+          <button
+            onClick={regenerateSummary}
+            className="summary-regenerate-btn"
+            disabled={loading}
+          >
+            {loading ? 'Regenerating...' : 'Regenerate'}
+          </button>
+        )}
       </div>
 
-      <p className="summary-text">{summary}</p>
+      {!summary && !loading && !error && (
+        <button onClick={fetchSummary} className="summary-btn">
+          Summarize Paper
+        </button>
+      )}
+
+      {loading && !summary && (
+        <div className="summary-loading">Generating summary...</div>
+      )}
+
+      {error && (
+        <div className="summary-error">
+          {error}
+          <button onClick={retry}>Retry</button>
+        </div>
+      )}
+
+      {summary && <p className="summary-text">{summary}</p>}
     </section>
   );
-  }
+}
 
 export default PaperSummary;

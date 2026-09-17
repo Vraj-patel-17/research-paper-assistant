@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 logger = logging.getLogger(__name__)
 
@@ -11,16 +11,16 @@ class HealthService:
         }
 
     @staticmethod
-    def readiness(db: Session) -> dict:
+    async def readiness(db: AsyncSession) -> dict:
         try:
-            db.execute(text("SELECT 1"))
+            await db.execute(text("SELECT 1"))
 
             return {
                 "status": "ready",
                 "database": "connected"
             }
 
-        except Exception as exc:
+        except Exception:
             logger.exception("Database readiness check failed")
             return {
                 "status": "not ready",

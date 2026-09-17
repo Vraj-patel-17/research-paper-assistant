@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.services.health_service import HealthService
@@ -13,8 +13,8 @@ def liveness():
 
 
 @router.get("/ready")
-def readiness(db: Session = Depends(get_db)):
-    result = HealthService.readiness(db)
+async def readiness(db: AsyncSession = Depends(get_db)):
+    result = await HealthService.readiness(db)
 
     if result["status"] != "ready":
         raise HTTPException(

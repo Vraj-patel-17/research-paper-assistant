@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.schemas.summary import SummaryResponse
@@ -19,12 +19,12 @@ router = APIRouter(
     "/{paper_id}/summary",
     response_model=SummaryResponse,
 )
-def get_paper_summary(
+async def get_paper_summary(
     paper_id: UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     try:
-        summary = generate_paper_summary(
+        summary = await generate_paper_summary(
             db=db,
             paper_id=paper_id,
         )
@@ -49,12 +49,12 @@ def get_paper_summary(
     "/{paper_id}/summary/regenerate",
     response_model=SummaryResponse,
 )
-def regenerate_summary(
+async def regenerate_summary(
     paper_id: UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     try:
-        summary = regenerate_paper_summary(
+        summary = await regenerate_paper_summary(
             db=db,
             paper_id=paper_id,
         )

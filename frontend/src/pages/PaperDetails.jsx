@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import { Bookmark } from "lucide-react";
 import "./PaperDetails.css";
 import PaperSummary from '../components/PaperSummary';
+import PaperChat from '../components/PaperChat';
 
 function PaperDetails() {
   const { paperId } = useParams();
@@ -173,8 +174,8 @@ function PaperDetails() {
         <section className="pdf-section">
           <div className="pdf-section-header">
             <h2>Paper</h2>
-            <a
-              href={paper.pdf_url}
+            
+              <a href={paper.pdf_url}
               target="_blank"
               rel="noopener noreferrer"
               className="read-paper-button"
@@ -193,10 +194,17 @@ function PaperDetails() {
           </div>
         </section>
       )}
+
       <PaperSummary paperId={paper.id} />
+
+      <section className="chat-section">
+        <h2> Ask about this paper</h2>
+        <PaperChat paperId={paper.id} />
+      </section>
+
       <section className="notes-section">
         <div className="notes-header">
-          <h2>📝 My Notes</h2>
+          <h2> My Notes</h2>
           <span>{notes.length}</span>
         </div>
 

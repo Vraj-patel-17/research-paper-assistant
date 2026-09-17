@@ -1,3 +1,5 @@
+import asyncio
+
 from app.exceptions.llm_exceptions import LLMGenerationError
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -11,7 +13,7 @@ class LLMClient(GeminiClient):
         super().__init__()
         self.model = settings.llm_model
 
-    def generate_text(self, prompt: str) -> str:
+    def _generate_text_sync(self, prompt: str) -> str:
         logger.info("Generating content using model '%s'.", self.model)
 
         try:
@@ -31,3 +33,6 @@ class LLMClient(GeminiClient):
 
         logger.info("Content generated successfully.")
         return response.text.strip()
+
+    async def generate_text(self, prompt: str) -> str:
+        return await asyncio.to_thread(self._generate_text_sync, prompt)

@@ -3,7 +3,8 @@ from fastapi import Depends,HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt,JWTError
 from datetime import datetime,timedelta
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.user import User
 from app.core.config import settings
@@ -20,7 +21,7 @@ def create_access_token(data:dict):
     to_encode.update({"exp":expire})
     return jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
 oauth2_scheme=OAuth2PasswordBearer(tokenUrl="login")
-def get_current_user(token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)):
+async def get_current_user(token:str=Depends(oauth2_scheme),db:AsyncSession=Depends(get_db)):
     credentials_exception=HTTPException(status_code=401,detail="Could not validate credentials")
     try: 
         payload=jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
@@ -29,9 +30,8 @@ def get_current_user(token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)
             raise HTTPException(status_code=401,detail="Invalid")
     except JWTError:
         raise HTTPException(status_code=401,detail="Invalid")
-    user=db.query(User).filter(User.email==email).first()
+    result = await db.execute(select(User).where(User.email==email))
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=401,detail="User not found")
     return user
-
-    

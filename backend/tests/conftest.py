@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 
 load_dotenv(".env.test")
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine,text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 import sys
 print("PYTHON PATH:", sys.path)
 import app
@@ -22,71 +23,66 @@ from app.core.security import hash_password
 from app.core.rate_limiter import limiter
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(DATABASE_URL)
+engine = create_async_engine(DATABASE_URL)
 
-TestingSessionLocal = sessionmaker(
+TestingSessionLocal = async_sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine,
+    expire_on_commit=False,
 )
 
 
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
+async def override_get_db():
+    async with TestingSessionLocal() as db:
         yield db
-    finally:
-        db.close()
 
 
 app.dependency_overrides[get_db] = override_get_db
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_database():
-    with engine.connect() as conn:
-        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-        conn.commit()
-
-    Base.metadata.create_all(bind=engine)
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def setup_database():
+    async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        await conn.run_sync(Base.metadata.create_all)
 
     yield
 
-    Base.metadata.drop_all(bind=engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
-@pytest.fixture()
-def db_session():
-    connection = engine.connect()
-    transaction = connection.begin()
+@pytest_asyncio.fixture()
+async def db_session():
+    async with engine.connect() as connection:
+        transaction = await connection.begin()
 
-    TestingSessionLocal = sessionmaker(
-        bind=connection,
-        autocommit=False,
-        autoflush=False,
-    )
+        session_factory = async_sessionmaker(
+            bind=connection,
+            autocommit=False,
+            autoflush=False,
+            expire_on_commit=False,
+        )
 
-    db = TestingSessionLocal()
+        async with session_factory() as db:
+            yield db
 
-    yield db
-
-    db.close()
-    transaction.rollback()
-    connection.close()
+        await transaction.rollback()
 
 @pytest.fixture()
 def client(db_session):
-    def override_get_db():
+    async def override_get_db():
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
     limiter.enabled = False
-    
+
     with TestClient(app) as client:
         yield client
     limiter.enabled = True
     app.dependency_overrides.clear()
 
-@pytest.fixture()
-def test_user(db_session):
+@pytest_asyncio.fixture()
+async def test_user(db_session):
     user = User(
         username="testuser",
         email="test@example.com",
@@ -94,8 +90,8 @@ def test_user(db_session):
     )
 
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     return user
 
@@ -117,8 +113,8 @@ def auth_headers(client, test_user):
         "Authorization": f"Bearer {token}"
     }
 
-@pytest.fixture
-def test_paper(db_session):
+@pytest_asyncio.fixture()
+async def test_paper(db_session):
     paper = Paper(
         title="Test Paper",
         abstract="Test Abstract",
@@ -129,7 +125,7 @@ def test_paper(db_session):
     )
 
     db_session.add(paper)
-    db_session.commit()
-    db_session.refresh(paper)
+    await db_session.commit()
+    await db_session.refresh(paper)
 
     return paper

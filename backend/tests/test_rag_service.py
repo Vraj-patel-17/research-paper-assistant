@@ -33,10 +33,12 @@ async def test_prepare_paper(rag_service, monkeypatch):
         ),
     )
 
-    rag_service.embedding_service.generate_chunk_embeddings.return_value = [
-        [0.1, 0.2],
-        [0.3, 0.4],
-    ]
+    rag_service.embedding_service.generate_chunk_embeddings = AsyncMock(
+        return_value=[
+            [0.1, 0.2],
+            [0.3, 0.4],
+        ]
+    )
 
     result = await rag_service.prepare_paper(
         "https://example.com/paper.pdf"
@@ -58,7 +60,8 @@ async def test_prepare_paper(rag_service, monkeypatch):
     )
 
 
-def test_retrieve_relevant_chunks(rag_service, monkeypatch):
+@pytest.mark.asyncio
+async def test_retrieve_relevant_chunks(rag_service, monkeypatch):
     embedded_chunks = [
         EmbeddedChunk(
             text="chunk one",
@@ -70,10 +73,9 @@ def test_retrieve_relevant_chunks(rag_service, monkeypatch):
         ),
     ]
 
-    rag_service.embedding_service.generate_query_embedding.return_value = [
-        0.5,
-        0.6,
-    ]
+    rag_service.embedding_service.generate_query_embedding = AsyncMock(
+        return_value=[0.5, 0.6]
+    )
 
     expected = [
         RetrievedChunk(
@@ -89,7 +91,7 @@ def test_retrieve_relevant_chunks(rag_service, monkeypatch):
         mock_retrieve,
     )
 
-    result = rag_service.retrieve_relevant_chunks(
+    result = await rag_service.retrieve_relevant_chunks(
         query="What is the paper about?",
         embedded_chunks=embedded_chunks,
         top_k=1,
@@ -130,7 +132,8 @@ def test_build_prompt(rag_service):
     assert "What accuracy did the model achieve?" in prompt
 
 
-def test_generate_answer(rag_service):
+@pytest.mark.asyncio
+async def test_generate_answer(rag_service):
     retrieved_chunks = [
         RetrievedChunk(
             text="The model achieved 95% accuracy.",
@@ -138,11 +141,11 @@ def test_generate_answer(rag_service):
         )
     ]
 
-    rag_service.llm_client.generate_text.return_value = (
-        "The model achieved 95% accuracy."
+    rag_service.llm_client.generate_text = AsyncMock(
+        return_value="The model achieved 95% accuracy."
     )
 
-    result = rag_service.generate_answer(
+    result = await rag_service.generate_answer(
         question="What accuracy did the model achieve?",
         retrieved_chunks=retrieved_chunks,
     )
@@ -172,11 +175,11 @@ async def test_answer_question(rag_service):
         return_value=embedded_chunks
     )
 
-    rag_service.retrieve_relevant_chunks = MagicMock(
+    rag_service.retrieve_relevant_chunks = AsyncMock(
         return_value=retrieved_chunks
     )
 
-    rag_service.generate_answer = MagicMock(
+    rag_service.generate_answer = AsyncMock(
         return_value="This is the answer."
     )
 
@@ -202,4 +205,3 @@ async def test_answer_question(rag_service):
         question="What does the paper say?",
         retrieved_chunks=retrieved_chunks,
     )
-

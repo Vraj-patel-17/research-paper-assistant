@@ -1,29 +1,36 @@
 from app.models.bookmark import Bookmark
 from app.models.paper import Paper
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from uuid import UUID
-def add_bookmark(db:Session,paper_id:UUID,user_id:UUID):
-    paper = db.query(Paper).filter(Paper.id == paper_id).first()
+
+async def add_bookmark(db: AsyncSession, paper_id: UUID, user_id: UUID):
+    paper = await db.get(Paper, paper_id)
     if not paper:
         return None
-    existing = (db.query(Bookmark).filter(Bookmark.user_id == user_id,Bookmark.paper_id == paper_id).first())
+    result = await db.execute(
+        select(Bookmark).where(Bookmark.user_id == user_id, Bookmark.paper_id == paper_id)
+    )
+    existing = result.scalar_one_or_none()
     if existing:
         return existing
-    bookmark = Bookmark(user_id=user_id,paper_id=paper_id)
+    bookmark = Bookmark(user_id=user_id, paper_id=paper_id)
     db.add(bookmark)
-    db.commit()
-    db.refresh(bookmark)
+    await db.commit()
+    await db.refresh(bookmark)
     return bookmark
-    
-def get_user_bookmarks(db:Session,user_id:UUID):
-    return (db.query(Bookmark).filter(Bookmark.user_id==user_id).all())
 
-def remove_bookmark(db: Session, user_id: UUID, paper_id: UUID):
-    bookmark = (db.query(Bookmark).filter(Bookmark.user_id == user_id,Bookmark.paper_id == paper_id).first())
+async def get_user_bookmarks(db: AsyncSession, user_id: UUID):
+    result = await db.execute(select(Bookmark).where(Bookmark.user_id == user_id))
+    return result.scalars().all()
 
+async def remove_bookmark(db: AsyncSession, user_id: UUID, paper_id: UUID):
+    result = await db.execute(
+        select(Bookmark).where(Bookmark.user_id == user_id, Bookmark.paper_id == paper_id)
+    )
+    bookmark = result.scalar_one_or_none()
     if not bookmark:
         return False
-    db.delete(bookmark)
-    db.commit()
-    
+    await db.delete(bookmark)
+    await db.commit()
     return True

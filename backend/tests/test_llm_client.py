@@ -1,9 +1,13 @@
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.exceptions.llm_exceptions import LLMGenerationError
 from app.services.llm_client import LLMClient
 
 
-def test_generate_text_success():
+@pytest.mark.asyncio
+async def test_generate_text_success():
     mock_response = MagicMock()
     mock_response.text = "Generated research summary."
 
@@ -17,7 +21,7 @@ def test_generate_text_success():
     client.client.models.generate_content.return_value = mock_response
     client.model = "test-model"
 
-    result = client.generate_text("Summarize this paper.")
+    result = await client.generate_text("Summarize this paper.")
 
     assert result == "Generated research summary."
 
@@ -26,7 +30,8 @@ def test_generate_text_success():
         contents="Summarize this paper.",
     )
 
-def test_generate_text_llm_failure():
+@pytest.mark.asyncio
+async def test_generate_text_llm_failure():
     with patch(
         "app.services.llm_client.GeminiClient.__init__",
         return_value=None,
@@ -40,12 +45,13 @@ def test_generate_text_llm_failure():
     client.model = "test-model"
 
     try:
-        client.generate_text("Summarize this paper.")
+        await client.generate_text("Summarize this paper.")
         assert False, "Expected LLMGenerationError"
     except LLMGenerationError as exc:
         assert str(exc) == "Failed to generate content using the LLM."
 
-def test_generate_text_empty_response():
+@pytest.mark.asyncio
+async def test_generate_text_empty_response():
     mock_response = MagicMock()
     mock_response.text = ""
 
@@ -60,7 +66,7 @@ def test_generate_text_empty_response():
     client.model = "test-model"
 
     try:
-        client.generate_text("Summarize this paper.")
+        await client.generate_text("Summarize this paper.")
         assert False, "Expected LLMGenerationError"
     except LLMGenerationError as exc:
         assert str(exc) == "The LLM returned an empty response"

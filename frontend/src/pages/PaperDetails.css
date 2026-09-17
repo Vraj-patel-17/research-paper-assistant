@@ -72,6 +72,22 @@
   cursor: not-allowed;
 }
 
+/* Chat */
+
+.chat-section {
+  margin-top: 32px;
+}
+
+.chat-section h2 {
+  margin: 0 0 14px;
+  color: var(--text-h);
+  font-size: 22px;
+}
+
+.chat-section .paper-chat {
+  height: 480px;
+}
+
 /* Notes */
 
 .notes-section {
@@ -216,6 +232,10 @@
   .paper-info {
     flex-direction: column;
     gap: 6px;
+  }
+
+  .chat-section .paper-chat {
+    height: 400px;
   }
 }
 .bookmark-toggle {
