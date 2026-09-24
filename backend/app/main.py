@@ -30,6 +30,7 @@ app.add_middleware(SlowAPIMiddleware)
 app.state.limiter = limiter
 app.add_exception_handler( RateLimitExceeded, _rate_limit_exceeded_handler,)
 register_exception_handlers(app)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -37,7 +38,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"])
 
-app.add_middleware(SecurityHeadersMiddleware)
+
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(user_route.router)

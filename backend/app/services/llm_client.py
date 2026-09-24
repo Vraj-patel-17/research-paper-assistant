@@ -1,9 +1,11 @@
 import asyncio
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from app.exceptions.llm_exceptions import LLMGenerationError
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.base_client import GeminiClient
+from google.genai.errors import ServerError
 
 logger = get_logger(__name__)
 
@@ -13,6 +15,12 @@ class LLMClient(GeminiClient):
         super().__init__()
         self.model = settings.llm_model
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type(ServerError),
+        reraise=True,
+    )
     def _generate_text_sync(self, prompt: str) -> str:
         logger.info("Generating content using model '%s'.", self.model)
 
@@ -21,6 +29,9 @@ class LLMClient(GeminiClient):
                 model=self.model,
                 contents=prompt,
             )
+        except ServerError:
+            logger.warning("Gemini server error, will retry if attempts remain.")
+            raise
         except Exception as exc:
             logger.exception("LLM generation failed.")
             raise LLMGenerationError(
