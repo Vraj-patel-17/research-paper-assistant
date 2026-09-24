@@ -45,7 +45,7 @@ jobs:
       - name: Run tests
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://postgres:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/research_paper_assistant_test
+          DATABASE_URL: postgresql+asyncpg://postgres:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/research_paper_assistant_test
           SECRET_KEY: test-secret-key
           GEMINI_API_KEY: test-gemini-key
         run: |
