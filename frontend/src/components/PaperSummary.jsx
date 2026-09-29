@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { api } from '../api/client.js';
 import './PaperSummary.css';
 
+const MIN_LOADING_MS = 1200;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function withMinDelay(promise) {
+  const [result] = await Promise.all([promise, sleep(MIN_LOADING_MS)]);
+  return result;
+}
+
 function PaperSummary({ paperId }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -11,7 +20,7 @@ function PaperSummary({ paperId }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get(`/papers/${paperId}/summary`);
+      const data = await withMinDelay(api.get(`/papers/${paperId}/summary`));
       setSummary(data.summary);
     } catch (err) {
       setError(err.message);
@@ -24,7 +33,9 @@ function PaperSummary({ paperId }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.post(`/papers/${paperId}/summary/regenerate`);
+      const data = await withMinDelay(
+        api.post(`/papers/${paperId}/summary/regenerate`)
+      );
       setSummary(data.summary);
     } catch (err) {
       setError(err.message);
@@ -56,18 +67,34 @@ function PaperSummary({ paperId }) {
         </button>
       )}
 
-      {loading && !summary && (
-        <div className="summary-loading">Generating summary...</div>
+      {loading && (
+        <div className="summary-loading" role="status" aria-live="polite">
+          <div className="summary-loading-label">
+            <span>{summary ? 'Regenerating summary' : 'Generating summary'}</span>
+            <span className="summary-dots" aria-hidden="true">
+              <span className="summary-dot" />
+              <span className="summary-dot" />
+              <span className="summary-dot" />
+            </span>
+          </div>
+
+          <div className="summary-skeleton" aria-hidden="true">
+            <div className="summary-skeleton-line" />
+            <div className="summary-skeleton-line" />
+            <div className="summary-skeleton-line" />
+            <div className="summary-skeleton-line summary-skeleton-line-short" />
+          </div>
+        </div>
       )}
 
-      {error && (
+      {error && !loading && (
         <div className="summary-error">
           {error}
           <button onClick={retry}>Retry</button>
         </div>
       )}
 
-      {summary && <p className="summary-text">{summary}</p>}
+      {summary && !loading && <p className="summary-text">{summary}</p>}
     </section>
   );
 }

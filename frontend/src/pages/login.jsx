@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { setToken } from "../auth/auth";
 import "./Login.css"; 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const justRegistered = Boolean(location.state?.registered);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,6 +64,12 @@ function Login() {
         <h2>Welcome Back</h2>
         <p className="subtitle">Please enter your credentials to log in.</p>
 
+        {justRegistered && !error && (
+          <div className="success-banner">
+            Account created! Please log in.
+          </div>
+        )}
+
         {error && <div className="error-banner">{error}</div>}
 
         <form onSubmit={handleSubmit} noValidate>
@@ -105,6 +113,10 @@ function Login() {
             {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        <p className="auth-footer">
+          Don't have an account? <Link to="/register">Create one</Link>
+        </p>
       </div>
     </div>
   );

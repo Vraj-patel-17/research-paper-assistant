@@ -27,7 +27,12 @@ async function request(endpoint, options = {}) {
   return;
 }
   if (!response.ok) {
-    throw new Error(data?.detail || "Request failed");
+    const detail = data?.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((item) => item.msg).join(", ")
+      : detail;
+
+    throw new Error(message || "Request failed");
   }
 
   return data;

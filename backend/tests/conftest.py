@@ -1,36 +1,56 @@
+import asyncio
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 os.environ["ENV_FILE"] = ".env.test"
 
 from dotenv import load_dotenv
 
 load_dotenv(".env.test")
+
+os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("GEMINI_API_KEY", "test-gemini-key")
+os.environ.setdefault("ALGORITHM", "HS256")
+os.environ.setdefault("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+
 import pytest
-import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-import sys
-print("PYTHON PATH:", sys.path)
-import app
-print("APP:", app.__file__)
-print("APP PATH:", app.__path__)
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
+
 from app.database import Base, get_db
 from app.main import app
 from app.models.user import User
 from app.models.paper import Paper
 from app.core.security import hash_password
 from app.core.rate_limiter import limiter
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_async_engine(DATABASE_URL)
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL is not set. Define it in .env.test or as an "
+        "environment variable before running the tests."
+    )
+
+engine = create_async_engine(DATABASE_URL, poolclass=NullPool)
 
 TestingSessionLocal = async_sessionmaker(
-    autocommit=False,
-    autoflush=False,
     bind=engine,
+    autoflush=False,
     expire_on_commit=False,
 )
+
+
+def run_async(fn):
+    """Run an async callable to completion on a fresh event loop.
+
+    Runs in a worker thread so it never collides with any event loop
+    pytest-asyncio may have set up on the main thread.
+    """
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(lambda: asyncio.run(fn())).result()
 
 
 async def override_get_db():
@@ -38,62 +58,75 @@ async def override_get_db():
         yield db
 
 
-app.dependency_overrides[get_db] = override_get_db
+@pytest.fixture(scope="session", autouse=True)
+def setup_database():
+    async def create():
+        async with engine.begin() as conn:
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+            # Start from a clean schema in case a previous run crashed.
+            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
-async def setup_database():
-    async with engine.begin() as conn:
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-        await conn.run_sync(Base.metadata.create_all)
+    async def drop():
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+        await engine.dispose()
+
+    run_async(create)
 
     yield
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    run_async(drop)
 
-@pytest_asyncio.fixture()
-async def db_session():
-    async with engine.connect() as connection:
-        transaction = await connection.begin()
 
-        session_factory = async_sessionmaker(
-            bind=connection,
-            autocommit=False,
-            autoflush=False,
-            expire_on_commit=False,
+@pytest.fixture(autouse=True)
+def clean_tables():
+    """Empty every table after each test so tests stay independent."""
+
+    async def truncate():
+        tables = ", ".join(
+            f'"{table.name}"' for table in Base.metadata.sorted_tables
         )
+        async with engine.begin() as conn:
+            await conn.execute(
+                text(f"TRUNCATE TABLE {tables} RESTART IDENTITY CASCADE")
+            )
 
-        async with session_factory() as db:
-            yield db
+    yield
 
-        await transaction.rollback()
+    run_async(truncate)
+
 
 @pytest.fixture()
-def client(db_session):
-    async def override_get_db():
-        yield db_session
-
+def client():
     app.dependency_overrides[get_db] = override_get_db
     limiter.enabled = False
 
-    with TestClient(app) as client:
-        yield client
+    with TestClient(app) as test_client:
+        yield test_client
+
     limiter.enabled = True
     app.dependency_overrides.clear()
 
-@pytest_asyncio.fixture()
-async def test_user(db_session):
-    user = User(
-        username="testuser",
-        email="test@example.com",
-        hashed_password=hash_password("password123"),
-    )
 
-    db_session.add(user)
-    await db_session.commit()
-    await db_session.refresh(user)
+@pytest.fixture()
+def test_user():
+    async def create():
+        async with TestingSessionLocal() as db:
+            user = User(
+                username="testuser",
+                email="test@example.com",
+                hashed_password=hash_password("password123"),
+            )
 
-    return user
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+
+            return user
+
+    return run_async(create)
+
 
 @pytest.fixture()
 def auth_headers(client, test_user):
@@ -113,19 +146,24 @@ def auth_headers(client, test_user):
         "Authorization": f"Bearer {token}"
     }
 
-@pytest_asyncio.fixture()
-async def test_paper(db_session):
-    paper = Paper(
-        title="Test Paper",
-        abstract="Test Abstract",
-        authors="John Doe",
-        source="arXiv",
-        external_id="test123",
-        pdf_url="https://example.com/test.pdf",
-    )
 
-    db_session.add(paper)
-    await db_session.commit()
-    await db_session.refresh(paper)
+@pytest.fixture()
+def test_paper():
+    async def create():
+        async with TestingSessionLocal() as db:
+            paper = Paper(
+                title="Test Paper",
+                abstract="Test Abstract",
+                authors="John Doe",
+                source="arXiv",
+                external_id="test123",
+                pdf_url="https://example.com/test.pdf",
+            )
 
-    return paper
+            db.add(paper)
+            await db.commit()
+            await db.refresh(paper)
+
+            return paper
+
+    return run_async(create)

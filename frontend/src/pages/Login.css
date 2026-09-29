@@ -8,6 +8,8 @@
   --border-color: #d1d5db;
   --error-color: #dc2626;
   --error-bg: #fee2e2;
+  --success-color: #166534;
+  --success-bg: #dcfce7;
 }
 
 * {
@@ -58,6 +60,17 @@ h2 {
   font-size: 14px;
   margin-bottom: 20px;
   border: 1px solid rgba(220, 38, 38, 0.2);
+  text-align: left;
+}
+
+.success-banner {
+  background-color: var(--success-bg);
+  color: var(--success-color);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(22, 101, 52, 0.2);
   text-align: left;
 }
 
@@ -147,4 +160,21 @@ input:disabled {
 .submit-btn:disabled {
   background-color: #93c5fd;
   cursor: not-allowed;
+}
+
+.auth-footer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.auth-footer a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
 }
