@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
-import "./Login.css";
+import AuthCard from "../components/AuthCard";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import PasswordInput from "../components/ui/PasswordInput";
 
 const MIN_USERNAME_LENGTH = 3;
 const MAX_USERNAME_LENGTH = 30;
@@ -15,7 +18,6 @@ function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -68,86 +70,91 @@ function Register() {
   }
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h2>Create Account</h2>
-        <p className="subtitle">Sign up to start exploring research papers.</p>
+    <AuthCard
+      title="Create account"
+      subtitle="Sign up to start exploring research papers."
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link to="/login" className="font-semibold text-primary hover:underline">
+            Log in
+          </Link>
+        </>
+      }
+    >
+      {error && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          {error}
+        </div>
+      )}
 
-        {error && <div className="error-banner">{error}</div>}
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <div>
+          <label htmlFor="username" className="mb-1.5 block text-sm font-medium">
+            Username
+          </label>
+          <Input
+            type="text"
+            id="username"
+            placeholder="yourname"
+            autoComplete="username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            disabled={loading}
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              placeholder="yourname"
-              autoComplete="username"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              disabled={loading}
-            />
-          </div>
+        <div>
+          <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+            Email address
+          </label>
+          <Input
+            type="email"
+            id="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            disabled={loading}
+          />
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={loading}
-            />
-          </div>
+        <div>
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium">
+            Password
+          </label>
+          <PasswordInput
+            id="password"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            disabled={loading}
+          />
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <div className="password-input-wrapper">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                placeholder="••••••••"
-                autoComplete="new-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={loading}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-          </div>
+        <div>
+          <label htmlFor="confirm-password" className="mb-1.5 block text-sm font-medium">
+            Confirm password
+          </label>
+          <PasswordInput
+            id="confirm-password"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            disabled={loading}
+          />
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="confirm-password">Confirm Password</label>
-            <input
-              type={showPassword ? "text" : "password"}
-              id="confirm-password"
-              placeholder="••••••••"
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              disabled={loading}
-            />
-          </div>
-
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? "Creating account..." : "Register"}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Already have an account? <Link to="/login">Log in</Link>
-        </p>
-      </div>
-    </div>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Creating account..." : "Register"}
+        </Button>
+      </form>
+    </AuthCard>
   );
 }
 

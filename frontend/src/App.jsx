@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence, MotionConfig } from "framer-motion";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -6,41 +7,75 @@ import PaperDetails from "./pages/PaperDetails";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import Bookmarks from "./pages/Bookmarks";
 import Navbar from "./components/Navbar";
-function App() {
+import PageTransition from "./components/PageTransition";
+
+function AnimatedRoutes() {
+  const location = useLocation();
+
   return (
-    <BrowserRouter>
-      <Navbar/>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         <Route
           path="/"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <PageTransition>
+                <Dashboard />
+              </PageTransition>
             </ProtectedRoute>
           }
         />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={
+            <PageTransition>
+              <Login />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PageTransition>
+              <Register />
+            </PageTransition>
+          }
+        />
 
         <Route
           path="/papers/:paperId"
           element={
             <ProtectedRoute>
-              <PaperDetails />
+              <PageTransition>
+                <PaperDetails />
+              </PageTransition>
             </ProtectedRoute>
           }
         />
         <Route
-              path="/bookmarks"
-              element={
-                <ProtectedRoute>
-                  <Bookmarks />
-                </ProtectedRoute>
-              }
-            />
+          path="/bookmarks"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <Bookmarks />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-    </BrowserRouter>
+    </AnimatePresence>
+  );
+}
+
+function App() {
+  return (
+    <MotionConfig reducedMotion="user">
+      <BrowserRouter>
+        <Navbar />
+        <AnimatedRoutes />
+      </BrowserRouter>
+    </MotionConfig>
   );
 }
 

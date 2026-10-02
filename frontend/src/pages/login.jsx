@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { setToken } from "../auth/auth";
-import "./Login.css"; 
+import AuthCard from "../components/AuthCard";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import PasswordInput from "../components/ui/PasswordInput";
+
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -10,8 +14,6 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(event) {
@@ -30,16 +32,13 @@ function Login() {
     formData.append("password", password);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: formData,
-        }
-      );
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formData,
+      });
 
       const data = await response.json();
 
@@ -48,10 +47,9 @@ function Login() {
         return;
       }
 
-      const token = data.access_token;
-      setToken(token);
+      setToken(data.access_token);
       navigate("/");
-    } catch (error) {
+    } catch {
       setError("Unable to connect to the server.");
     } finally {
       setIsLoading(false);
@@ -59,66 +57,68 @@ function Login() {
   }
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h2>Welcome Back</h2>
-        <p className="subtitle">Please enter your credentials to log in.</p>
+    <AuthCard
+      title="Welcome back"
+      subtitle="Please enter your credentials to log in."
+      footer={
+        <>
+          Don't have an account?{" "}
+          <Link to="/register" className="font-semibold text-primary hover:underline">
+            Create one
+          </Link>
+        </>
+      }
+    >
+      {justRegistered && !error && (
+        <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
+          Account created! Please log in.
+        </div>
+      )}
 
-        {justRegistered && !error && (
-          <div className="success-banner">
-            Account created! Please log in.
-          </div>
-        )}
+      {error && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          {error}
+        </div>
+      )}
 
-        {error && <div className="error-banner">{error}</div>}
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <div>
+          <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+            Email address
+          </label>
+          <Input
+            type="email"
+            id="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            disabled={isLoading}
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={isLoading}
-            />
-          </div>
+        <div>
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium">
+            Password
+          </label>
+          <PasswordInput
+            id="password"
+            placeholder="••••••••"
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            disabled={isLoading}
+          />
+        </div>
 
-          <div className="form-group">
-            <div className="password-label-row">
-              <label htmlFor="password">Password</label>
-            </div>
-            <div className="password-input-wrapper">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                disabled={isLoading}
-              />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={isLoading}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-          </div>
-
-          <button type="submit" className="submit-btn" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Don't have an account? <Link to="/register">Create one</Link>
-        </p>
-      </div>
-    </div>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Logging in..." : "Login"}
+        </Button>
+      </form>
+    </AuthCard>
   );
 }
 

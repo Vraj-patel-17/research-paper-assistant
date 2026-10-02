@@ -1,26 +1,21 @@
 import { useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { api } from '../api/client.js';
-import './PaperSummary.css';
-
-const MIN_LOADING_MS = 1200;
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-async function withMinDelay(promise) {
-  const [result] = await Promise.all([promise, sleep(MIN_LOADING_MS)]);
-  return result;
-}
+import { cn } from '../lib/utils';
+import Button from './ui/Button';
+import Skeleton from './ui/Skeleton';
+import Markdown from './Markdown';
 
 function PaperSummary({ paperId }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchSummary = async () => {
+  const run = async (request) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await withMinDelay(api.get(`/papers/${paperId}/summary`));
+      const data = await request();
       setSummary(data.summary);
     } catch (err) {
       setError(err.message);
@@ -29,72 +24,55 @@ function PaperSummary({ paperId }) {
     }
   };
 
-  const regenerateSummary = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await withMinDelay(
-        api.post(`/papers/${paperId}/summary/regenerate`)
-      );
-      setSummary(data.summary);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchSummary = () => run(() => api.get(`/papers/${paperId}/summary`));
+  const regenerateSummary = () =>
+    run(() => api.post(`/papers/${paperId}/summary/regenerate`));
 
   const retry = summary ? regenerateSummary : fetchSummary;
 
   return (
-    <section className="paper-summary">
-      <div className="summary-header">
-        <h2>Summary</h2>
+    <section className="rounded-xl border border-border bg-card p-5">
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <h2 className="text-base font-semibold">AI Summary</h2>
         {summary && (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={regenerateSummary}
-            className="summary-regenerate-btn"
             disabled={loading}
           >
-            {loading ? 'Regenerating...' : 'Regenerate'}
-          </button>
+            <RefreshCw size={14} className={cn(loading && 'animate-spin')} />
+            {loading ? 'Regenerating' : 'Regenerate'}
+          </Button>
         )}
       </div>
 
       {!summary && !loading && !error && (
-        <button onClick={fetchSummary} className="summary-btn">
-          Summarize Paper
-        </button>
+        <Button onClick={fetchSummary}>Summarize paper</Button>
       )}
 
       {loading && (
-        <div className="summary-loading" role="status" aria-live="polite">
-          <div className="summary-loading-label">
-            <span>{summary ? 'Regenerating summary' : 'Generating summary'}</span>
-            <span className="summary-dots" aria-hidden="true">
-              <span className="summary-dot" />
-              <span className="summary-dot" />
-              <span className="summary-dot" />
-            </span>
-          </div>
-
-          <div className="summary-skeleton" aria-hidden="true">
-            <div className="summary-skeleton-line" />
-            <div className="summary-skeleton-line" />
-            <div className="summary-skeleton-line" />
-            <div className="summary-skeleton-line summary-skeleton-line-short" />
-          </div>
+        <div role="status" aria-live="polite" className="space-y-2.5">
+          <p className="text-sm text-muted-foreground">
+            {summary ? 'Regenerating summary…' : 'Generating summary…'}
+          </p>
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+          <Skeleton className="h-3 w-3/5" />
         </div>
       )}
 
       {error && !loading && (
-        <div className="summary-error">
-          {error}
-          <button onClick={retry}>Retry</button>
+        <div role="alert" className="flex items-center gap-3 text-sm text-destructive">
+          <span>{error}</span>
+          <Button variant="outline" size="sm" onClick={retry}>
+            Retry
+          </Button>
         </div>
       )}
 
-      {summary && !loading && <p className="summary-text">{summary}</p>}
+      {summary && !loading && <Markdown>{summary}</Markdown>}
     </section>
   );
 }

@@ -1,48 +1,61 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
+  --background: #ffffff;
+  --foreground: #0f0a1a;
+  --card: #ffffff;
+  --muted: #f5f3f8;
+  --muted-foreground: #6b6375;
   --border: #e5e4e7;
-
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
-    rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-
-  font-family: var(--sans);
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --accent: rgba(124, 58, 237, 0.1);
+  --destructive: #dc2626;
+  --ring: #7c3aed;
+  color-scheme: light;
 }
 
-* {
-  box-sizing: border-box;
+.dark {
+  --background: #0b0914;
+  --foreground: #f4f2f8;
+  --card: #13101f;
+  --muted: #1b1729;
+  --muted-foreground: #a39bb3;
+  --border: #2a2540;
+  --primary: #a78bfa;
+  --primary-foreground: #0b0914;
+  --accent: rgba(167, 139, 250, 0.14);
+  --destructive: #f87171;
+  --ring: #a78bfa;
+  color-scheme: dark;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: var(--bg);
+@theme inline {
+  --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-destructive: var(--destructive);
+  --color-ring: var(--ring);
 }
 
-#root {
-  min-height: 100vh;
-}
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 
-a {
-  color: inherit;
-}
-
-button,
-input {
-  font: inherit;
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    min-width: 320px;
+  }
 }
