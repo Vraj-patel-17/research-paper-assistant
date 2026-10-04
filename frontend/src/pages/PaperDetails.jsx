@@ -59,7 +59,7 @@ function PaperDetails() {
 
         setPaper(paperData);
         setIsBookmarked(
-          bookmarks.some((bookmark) => bookmark.paper_id === Number(paperId))
+          bookmarks.some((bookmark) => bookmark.paper_id === String(paperId))
         );
       } catch (err) {
         if (!cancelled) setLoadError(err.message);

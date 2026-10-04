@@ -1,4 +1,6 @@
 import asyncio
+from collections.abc import AsyncIterator
+
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from app.exceptions.llm_exceptions import LLMGenerationError
@@ -47,3 +49,33 @@ class LLMClient(GeminiClient):
 
     async def generate_text(self, prompt: str) -> str:
         return await asyncio.to_thread(self._generate_text_sync, prompt)
+
+    async def stream_text(self, prompt: str) -> AsyncIterator[str]:
+        """Yields text fragments as Gemini generates them.
+
+        No retry here: once tokens have been sent to the browser, retrying
+        would duplicate text. Failures surface as LLMGenerationError.
+        """
+        logger.info("Streaming content using model '%s'.", self.model)
+        emitted = False
+
+        try:
+            stream = await self.client.aio.models.generate_content_stream(
+                model=self.model,
+                contents=prompt,
+            )
+            async for chunk in stream:
+                if chunk.text:
+                    emitted = True
+                    yield chunk.text
+        except Exception as exc:
+            logger.exception("LLM streaming failed.")
+            raise LLMGenerationError(
+                "Failed to stream content using the LLM."
+            ) from exc
+
+        if not emitted:
+            logger.error("LLM returned an empty streamed response.")
+            raise LLMGenerationError("The LLM returned an empty response")
+
+        logger.info("Content streamed successfully.")

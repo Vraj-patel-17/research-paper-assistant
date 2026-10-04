@@ -1,4 +1,5 @@
 import hashlib
+from collections.abc import AsyncIterator
 
 from app.schemas.rag import EmbeddedChunk, RetrievedChunk
 from app.services.embeddings.embedding_service import EmbeddingService
@@ -6,6 +7,8 @@ from app.services.llm_client import LLMClient
 from app.services.paper_processing import process_paper_pdf, chunk_pages
 from app.services.retrieval_service import retrieve_chunks
 from app.services.paper_chunk_service import get_stored_embeddings
+
+SNIPPET_CHARS = 200
 
 
 def derive_paper_id(pdf_url: str) -> str:
@@ -108,3 +111,39 @@ class RAGService:
         )
 
         return await self.generate_answer(question=question, retrieved_chunks=retrieved_chunks)
+
+    async def stream_answer_question(
+        self,
+        pdf_url: str,
+        question: str,
+        paper_id: str | None = None,
+        top_k: int = 5,
+    ) -> AsyncIterator[dict]:
+        """Yields events: status, sources, then token events as they arrive."""
+        yield {"type": "status", "message": "Reading the paper…"}
+        embedded_chunks = await self.prepare_paper(pdf_url, paper_id=paper_id)
+
+        yield {"type": "status", "message": "Finding relevant sections…"}
+        retrieved_chunks = await self.retrieve_relevant_chunks(
+            query=question,
+            embedded_chunks=embedded_chunks,
+            top_k=top_k,
+        )
+
+        yield {
+            "type": "sources",
+            "sources": [
+                {
+                    "page": chunk.page,
+                    "score": round(chunk.score, 4),
+                    "snippet": chunk.text[:SNIPPET_CHARS],
+                }
+                for chunk in retrieved_chunks
+            ],
+        }
+
+        yield {"type": "status", "message": "Writing the answer…"}
+        prompt = self.build_prompt(question=question, retrieved_chunks=retrieved_chunks)
+
+        async for token in self.llm_client.stream_text(prompt):
+            yield {"type": "token", "text": token}

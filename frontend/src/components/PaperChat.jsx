@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Check, Copy, Send, Sparkles } from 'lucide-react';
+import { Check, Copy, Send, Sparkles, Square } from 'lucide-react';
 import { api } from '../api/client.js';
 import { cn } from '../lib/utils';
 import Button from './ui/Button';
@@ -13,20 +13,49 @@ const SUGGESTIONS = [
   'Explain the main result simply',
 ];
 
+function Sources({ sources }) {
+  const byPage = new Map();
+  (sources ?? []).forEach((source) => {
+    if (source.page && !byPage.has(source.page)) byPage.set(source.page, source);
+  });
+
+  const pages = [...byPage.values()].sort((a, b) => a.page - b.page);
+  if (pages.length === 0) return null;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+      <span>Sources:</span>
+      {pages.map((source) => (
+        <span
+          key={source.page}
+          title={source.snippet}
+          className="rounded-full bg-accent px-2 py-0.5 text-primary"
+        >
+          p.{source.page}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function PaperChat({ paperId }) {
-  const [messages, setMessages] = useState([]); // { id, role, text }
+  const [messages, setMessages] = useState([]); // { id, role, text, sources? }
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
   const [error, setError] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
 
   const lastQuestion = useRef('');
   const scrollRef = useRef(null);
+  const abortRef = useRef(null);
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  }, [messages, loading, error]);
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: loading ? 'auto' : 'smooth' });
+  }, [messages, status, error, loading]);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const ask = async (question, { addUserMessage = true } = {}) => {
     const trimmed = question.trim();
@@ -34,30 +63,59 @@ function PaperChat({ paperId }) {
 
     lastQuestion.current = trimmed;
 
-    if (addUserMessage) {
-      setMessages((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), role: 'user', text: trimmed },
-      ]);
-    }
+    const assistantId = crypto.randomUUID();
+    setMessages((prev) => [
+      ...prev,
+      ...(addUserMessage
+        ? [{ id: crypto.randomUUID(), role: 'user', text: trimmed }]
+        : []),
+      { id: assistantId, role: 'assistant', text: '', sources: [] },
+    ]);
     setError(null);
+    setStatus('');
     setLoading(true);
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const updateAssistant = (updater) =>
+      setMessages((prev) =>
+        prev.map((message) => (message.id === assistantId ? updater(message) : message))
+      );
+
     try {
-      const data = await api.post(`/papers/${paperId}/ask`, {
-        question: trimmed,
-        top_k: 5,
-      });
-      setMessages((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), role: 'assistant', text: data.answer },
-      ]);
+      await api.stream(
+        `/papers/${paperId}/ask/stream`,
+        { question: trimmed, top_k: 5 },
+        {
+          signal: controller.signal,
+          onEvent: (event) => {
+            if (event.type === 'status') {
+              setStatus(event.message);
+            } else if (event.type === 'sources') {
+              updateAssistant((message) => ({ ...message, sources: event.sources }));
+            } else if (event.type === 'token') {
+              updateAssistant((message) => ({ ...message, text: message.text + event.text }));
+            } else if (event.type === 'error') {
+              throw new Error(event.message);
+            }
+          },
+        }
+      );
     } catch (err) {
-      setError(err.message);
+      if (err.name !== 'AbortError') setError(err.message);
     } finally {
+      abortRef.current = null;
       setLoading(false);
+      setStatus('');
+      // Drop the placeholder if nothing was received (error or early stop).
+      setMessages((prev) =>
+        prev.filter((message) => !(message.id === assistantId && !message.text))
+      );
     }
   };
+
+  const stop = () => abortRef.current?.abort();
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -82,6 +140,8 @@ function PaperChat({ paperId }) {
       // Clipboard not available.
     }
   };
+
+  const lastId = messages.at(-1)?.id;
 
   return (
     <section className="flex h-full flex-col">
@@ -112,55 +172,64 @@ function PaperChat({ paperId }) {
           </div>
         )}
 
-        {messages.map((message) => (
-          <Motion.div
-            key={message.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className={cn(
-              'flex',
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            )}
-          >
-            {message.role === 'user' ? (
-              <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
-                {message.text}
-              </div>
-            ) : (
-              <div className="max-w-[92%] rounded-2xl rounded-bl-sm bg-muted px-4 py-3">
-                <Markdown>{message.text}</Markdown>
-                <div className="mt-2 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => copyAnswer(message)}
-                    aria-label="Copy answer"
-                    className="cursor-pointer text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    {copiedId === message.id ? (
-                      <Check size={14} />
-                    ) : (
-                      <Copy size={14} />
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-          </Motion.div>
-        ))}
+        {messages.map((message) => {
+          const isUser = message.role === 'user';
+          const isStreaming = loading && message.id === lastId;
 
-        {loading && (
-          <div
-            className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-sm bg-muted px-4 py-3"
-            role="status"
-            aria-live="polite"
-            aria-label="Assistant is typing"
-          >
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground" />
-          </div>
-        )}
+          return (
+            <Motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className={cn('flex', isUser ? 'justify-end' : 'justify-start')}
+            >
+              {isUser ? (
+                <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
+                  {message.text}
+                </div>
+              ) : !message.text ? (
+                <div
+                  className="flex items-center gap-2 rounded-2xl rounded-bl-sm bg-muted px-4 py-3"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span className="flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground" />
+                  </span>
+                  {status && (
+                    <span className="text-xs text-muted-foreground">{status}</span>
+                  )}
+                </div>
+              ) : (
+                <div className="max-w-[92%] rounded-2xl rounded-bl-sm bg-muted px-4 py-3">
+                  <Markdown>{message.text}</Markdown>
+                  {!isStreaming && (
+                    <>
+                      <Sources sources={message.sources} />
+                      <div className="mt-2 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => copyAnswer(message)}
+                          aria-label="Copy answer"
+                          className="cursor-pointer text-muted-foreground transition-colors hover:text-primary"
+                        >
+                          {copiedId === message.id ? (
+                            <Check size={14} />
+                          ) : (
+                            <Copy size={14} />
+                          )}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </Motion.div>
+          );
+        })}
 
         {error && (
           <div
@@ -194,14 +263,26 @@ function PaperChat({ paperId }) {
           disabled={loading}
           className="min-h-10 flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
         />
-        <Button
-          type="submit"
-          size="icon"
-          aria-label="Send question"
-          disabled={loading || !draft.trim()}
-        >
-          <Send size={16} />
-        </Button>
+        {loading ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label="Stop generating"
+            onClick={stop}
+          >
+            <Square size={14} fill="currentColor" />
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            size="icon"
+            aria-label="Send question"
+            disabled={!draft.trim()}
+          >
+            <Send size={16} />
+          </Button>
+        )}
       </form>
     </section>
   );
