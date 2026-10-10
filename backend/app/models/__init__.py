@@ -7,4 +7,4 @@ from .topic import Topic
 from .paper_topic import PaperTopic
 from .note import Note
 from .paper_summary import PaperSummary
-from .paper_chunk_embedding import PaperChunkEmbedding
+from .paper_chunk import PaperChunk

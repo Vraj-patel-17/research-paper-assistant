@@ -1,7 +1,9 @@
 from __future__ import annotations
 import datetime
-from sqlalchemy import String,DateTime,func,UniqueConstraint,Text
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import String,DateTime,func,UniqueConstraint,Text,Index
 from sqlalchemy.orm import Mapped,mapped_column,relationship
+from app.core.config import settings
 from app.database import Base
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
@@ -17,6 +19,12 @@ class Paper(Base):
     __tablename__="papers"
     __table_args__ = (
         UniqueConstraint("source", "external_id", name="uq_paper_source_external_id"),
+        Index(
+            "ix_papers_abstract_embedding_hnsw",
+            "abstract_embedding",
+            postgresql_using="hnsw",
+            postgresql_ops={"abstract_embedding": "vector_cosine_ops"},
+        ),
     )
     id: Mapped[UUID]=mapped_column(UUID(as_uuid=True),primary_key=True,default=uuid4)
     external_id: Mapped[str]=mapped_column(String(50),nullable=False)
@@ -24,6 +32,7 @@ class Paper(Base):
     title: Mapped[str]=mapped_column(String(500),nullable=False)
     authors: Mapped[str]=mapped_column(Text,nullable=False)
     abstract: Mapped[str]=mapped_column(Text)
+    abstract_embedding: Mapped[list[float] | None]=mapped_column(Vector(settings.embedding_dimensions),nullable=True,deferred=True)
     pdf_url :Mapped[str]=mapped_column(String(500))
     publication_date:Mapped[datetime.datetime]=mapped_column(DateTime(timezone=True),nullable=True)
     created_at: Mapped[datetime.datetime]=mapped_column(DateTime(timezone=True),server_default=func.now())
@@ -43,5 +52,3 @@ class Paper(Base):
     uselist=False,
     cascade="all, delete-orphan",
 )
-    
-    

@@ -1,4 +1,3 @@
-import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID
@@ -28,9 +27,7 @@ async def generate_paper_summary(
     if existing_summary:
         return existing_summary.summary
 
-    # pdf_service does blocking I/O (httpx.get + PyMuPDF parsing) —
-    # offload to a thread so it doesn't stall the event loop.
-    full_text = await asyncio.to_thread(pdf_service.extract_from_url, paper.pdf_url)
+    full_text = await pdf_service.extract_from_url(paper.pdf_url)
 
     prompt = build_summary_prompt(
         title=paper.title,
@@ -61,7 +58,7 @@ async def regenerate_paper_summary(
     if not paper.pdf_url:
         raise ValueError("Paper does not have a PDF URL")
 
-    full_text = await asyncio.to_thread(pdf_service.extract_from_url, paper.pdf_url)
+    full_text = await pdf_service.extract_from_url(paper.pdf_url)
 
     prompt = build_summary_prompt(
         title=paper.title,

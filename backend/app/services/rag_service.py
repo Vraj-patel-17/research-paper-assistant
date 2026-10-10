@@ -1,22 +1,28 @@
-import hashlib
+import asyncio
+from collections import defaultdict
 from collections.abc import AsyncIterator
+from uuid import UUID
 
-from app.schemas.rag import EmbeddedChunk, RetrievedChunk
+from app.schemas.rag import RetrievedChunk
 from app.services.embeddings.embedding_service import EmbeddingService
 from app.services.llm_client import LLMClient
+from app.services.paper_chunk_service import (
+    has_fresh_chunks,
+    purge_expired_chunks,
+    replace_chunks,
+    search_chunks,
+)
 from app.services.paper_processing import process_paper_pdf, chunk_pages
-from app.services.retrieval_service import retrieve_chunks
-from app.services.paper_chunk_service import get_stored_embeddings
 
 SNIPPET_CHARS = 200
 
-
-def derive_paper_id(pdf_url: str) -> str:
-    return hashlib.sha256(pdf_url.encode("utf-8")).hexdigest()
+# Stops two concurrent questions on the same uncached paper from both
+# downloading the PDF and paying for embeddings (per process only).
+_ingest_locks: defaultdict[UUID, asyncio.Lock] = defaultdict(asyncio.Lock)
 
 
 class RAGService:
-    def __init__(self, db_session=None):
+    def __init__(self, db_session):
         self.embedding_service = EmbeddingService()
         self.llm_client = LLMClient()
         self.db_session = db_session
@@ -24,45 +30,54 @@ class RAGService:
     async def prepare_paper(
         self,
         pdf_url: str,
-        paper_id: str | None = None,
-    ) -> list[EmbeddedChunk]:
-        paper_id = paper_id or derive_paper_id(pdf_url)
+        paper_id: str | UUID,
+    ) -> UUID:
+        """Makes sure fresh chunks + embeddings are cached for the paper.
 
-        pages = await process_paper_pdf(pdf_url)
-        page_chunks = chunk_pages(pages)
+        arXiv is only contacted when nothing unexpired is cached, so repeat
+        questions never trigger a PDF download.
+        """
+        paper_uuid = UUID(str(paper_id))
 
-        if not page_chunks:
-            raise ValueError("No chunks were created from the paper.")
+        async with _ingest_locks[paper_uuid]:
+            await purge_expired_chunks(self.db_session)
 
-        texts = [text for _, text in page_chunks]
+            if await has_fresh_chunks(self.db_session, paper_uuid):
+                return paper_uuid
 
-        cached_embeddings: list[list[float]] = []
-        if self.db_session is not None:
-            cached_embeddings = await get_stored_embeddings(self.db_session, paper_id)
+            pages = await process_paper_pdf(pdf_url)
+            page_chunks = chunk_pages(pages)
 
-        if cached_embeddings and len(cached_embeddings) == len(texts):
-            embeddings = cached_embeddings
-        else:
-            embeddings = await self.embedding_service.generate_and_save_chunk_embeddings(
-                texts, paper_id=paper_id, db_session=self.db_session
+            if not page_chunks:
+                raise ValueError("No chunks were created from the paper.")
+
+            embeddings = await self.embedding_service.generate_chunk_embeddings(
+                [text for _, text in page_chunks]
             )
 
-        return [
-            EmbeddedChunk(text=text, embedding=embedding, page=page_number)
-            for (page_number, text), embedding in zip(page_chunks, embeddings)
-        ]
+            await replace_chunks(
+                self.db_session,
+                paper_uuid,
+                [
+                    (page, text, embedding)
+                    for (page, text), embedding in zip(page_chunks, embeddings)
+                ],
+            )
+
+        return paper_uuid
 
     async def retrieve_relevant_chunks(
         self,
         query: str,
-        embedded_chunks: list[EmbeddedChunk],
+        paper_id: UUID,
         top_k: int = 5,
     ) -> list[RetrievedChunk]:
         query_embedding = await self.embedding_service.generate_query_embedding(query)
 
-        return retrieve_chunks(
+        return await search_chunks(
+            self.db_session,
+            paper_id=paper_id,
             query_embedding=query_embedding,
-            chunks=embedded_chunks,
             top_k=top_k,
         )
 
@@ -99,14 +114,14 @@ class RAGService:
         self,
         pdf_url: str,
         question: str,
-        paper_id: str | None = None,
+        paper_id: str | UUID,
         top_k: int = 5,
     ) -> str:
-        embedded_chunks = await self.prepare_paper(pdf_url, paper_id=paper_id)
+        paper_uuid = await self.prepare_paper(pdf_url, paper_id=paper_id)
 
         retrieved_chunks = await self.retrieve_relevant_chunks(
             query=question,
-            embedded_chunks=embedded_chunks,
+            paper_id=paper_uuid,
             top_k=top_k,
         )
 
@@ -116,17 +131,17 @@ class RAGService:
         self,
         pdf_url: str,
         question: str,
-        paper_id: str | None = None,
+        paper_id: str | UUID,
         top_k: int = 5,
     ) -> AsyncIterator[dict]:
         """Yields events: status, sources, then token events as they arrive."""
         yield {"type": "status", "message": "Reading the paper…"}
-        embedded_chunks = await self.prepare_paper(pdf_url, paper_id=paper_id)
+        paper_uuid = await self.prepare_paper(pdf_url, paper_id=paper_id)
 
         yield {"type": "status", "message": "Finding relevant sections…"}
         retrieved_chunks = await self.retrieve_relevant_chunks(
             query=question,
-            embedded_chunks=embedded_chunks,
+            paper_id=paper_uuid,
             top_k=top_k,
         )
 

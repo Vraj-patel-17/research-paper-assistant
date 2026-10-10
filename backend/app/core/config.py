@@ -21,11 +21,20 @@ class Settings(BaseSettings):
 
     # RAG
     embedding_model: str = "gemini-embedding-001"
+    # pgvector's HNSW index supports at most 2000 dims for `vector`
+    embedding_dimensions: int = Field(default=768, gt=0, le=2000)
     llm_model: str = "gemini-2.5-flash"
 
     # Chunking
     chunk_size: int = Field(default=250, gt=0)
     chunk_overlap: int = Field(default=50, ge=0)
+
+    # ge=3.0: arXiv allows at most one request every 3 seconds
+    arxiv_min_interval_seconds: float = Field(default=3.0, ge=3.0)
+    arxiv_user_agent: str = "ResearchPaperAssistant/1.0"
+    # How long extracted paper text + chunk embeddings may stay cached
+    chunk_cache_ttl_days: int = Field(default=7, ge=1)
+
     PDF_TIMEOUT : int = 30
     SUMMARY_MAX_WORDS: int=200
     model_config = SettingsConfigDict(

@@ -1,59 +1,88 @@
-from sqlalchemy import select, delete
+import datetime
+from uuid import UUID
+
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.paper_chunk_embedding import PaperChunkEmbedding
+from app.core.config import settings
+from app.models.paper_chunk import PaperChunk
+from app.schemas.rag import RetrievedChunk
 
 
-async def get_stored_embeddings(
-    session: AsyncSession,
-    paper_id: str,
-) -> list[list[float]]:
-    """Returns embeddings ordered by chunk_index, or [] if nothing cached."""
+async def purge_expired_chunks(session: AsyncSession) -> int:
+    """Deletes cached chunks past their expiry. Cheap (indexed), so it runs
+    opportunistically before each ingestion instead of needing a scheduler."""
     result = await session.execute(
-        select(PaperChunkEmbedding)
-        .where(PaperChunkEmbedding.paper_id == paper_id)
-        .order_by(PaperChunkEmbedding.chunk_index)
-    )
-    rows = result.scalars().all()
-    return [row.embedding for row in rows]
-
-
-async def clear_embeddings(session: AsyncSession, paper_id: str) -> None:
-    """Call once before starting a fresh ingestion, to wipe any partial
-    leftovers from a previous failed attempt."""
-    await session.execute(
-        delete(PaperChunkEmbedding).where(PaperChunkEmbedding.paper_id == paper_id)
+        delete(PaperChunk).where(PaperChunk.expires_at < func.now())
     )
     await session.commit()
+    return result.rowcount or 0
 
 
-async def save_partial_embeddings(
+async def has_fresh_chunks(session: AsyncSession, paper_id: UUID) -> bool:
+    result = await session.execute(
+        select(PaperChunk.id)
+        .where(
+            PaperChunk.paper_id == paper_id,
+            PaperChunk.expires_at > func.now(),
+        )
+        .limit(1)
+    )
+    return result.first() is not None
+
+
+async def replace_chunks(
     session: AsyncSession,
-    paper_id: str,
-    start_index: int,
-    embeddings: list[list[float]],
+    paper_id: UUID,
+    rows: list[tuple[int | None, str, list[float]]],
 ) -> None:
-    """Appends one batch's embeddings, indexed starting at start_index.
-    Does NOT delete existing rows — call clear_embeddings() once before
-    the batch loop starts instead."""
+    """Atomically swaps a paper's cached chunks for a fresh set.
+
+    rows: (page, text, embedding) per chunk, in chunk order.
+    """
+    expires_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=settings.chunk_cache_ttl_days
+    )
+
+    await session.execute(delete(PaperChunk).where(PaperChunk.paper_id == paper_id))
     session.add_all(
         [
-            PaperChunkEmbedding(
+            PaperChunk(
                 paper_id=paper_id,
-                chunk_index=start_index + offset,
+                chunk_index=index,
+                page=page,
+                text=text,
                 embedding=embedding,
+                expires_at=expires_at,
             )
-            for offset, embedding in enumerate(embeddings)
+            for index, (page, text, embedding) in enumerate(rows)
         ]
     )
     await session.commit()
 
 
-async def save_embeddings(
+async def search_chunks(
     session: AsyncSession,
-    paper_id: str,
-    embeddings: list[list[float]],
-) -> None:
-    """Kept for backward compatibility / non-incremental callers."""
-    await clear_embeddings(session, paper_id)
-    await save_partial_embeddings(session, paper_id, 0, embeddings)
+    paper_id: UUID,
+    query_embedding: list[float],
+    top_k: int,
+) -> list[RetrievedChunk]:
+    if top_k <= 0:
+        raise ValueError("top_k must be greater than 0.")
+
+    distance = PaperChunk.embedding.cosine_distance(query_embedding)
+
+    result = await session.execute(
+        select(PaperChunk, distance.label("distance"))
+        .where(
+            PaperChunk.paper_id == paper_id,
+            PaperChunk.expires_at > func.now(),
+        )
+        .order_by(distance)
+        .limit(top_k)
+    )
+
+    return [
+        RetrievedChunk(text=chunk.text, score=1.0 - float(dist), page=chunk.page)
+        for chunk, dist in result.all()
+    ]

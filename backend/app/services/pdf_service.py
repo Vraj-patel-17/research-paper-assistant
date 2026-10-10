@@ -1,31 +1,12 @@
+import asyncio
 from io import BytesIO
 
 import fitz  # PyMuPDF
-import httpx
-from app.exceptions.pdf_exceptions import PDFDownloadError,PDFExtractionError,EmptyPDFError
+from app.exceptions.pdf_exceptions import PDFExtractionError,EmptyPDFError
 from app.core.logging import get_logger
-from app.core.config import settings
+from app.services.paper_processing import download_pdf
 logger = get_logger(__name__)
 class PDFService:
-    
-
-    def download_pdf(self, pdf_url: str) -> bytes:
-        logger.info("Downloading PDF from %s",pdf_url)
-        try:
-            response = httpx.get(
-                pdf_url,
-                timeout=settings.PDF_TIMEOUT,
-                follow_redirects=True,)
-            response.raise_for_status()
-        except httpx.HTTPError as e:
-            logger.exception("Failed to download PDF.")
-            raise PDFDownloadError(f"Failed to download PDF from '{pdf_url}'.") from e
-        content_type=response.headers.get("content-type","").lower()
-        if "application/pdf" not in content_type:
-            logger.error("Invalid content type received: %s",content_type,)
-            raise PDFDownloadError(f"URL did not return a PDF.")
-        logger.info("PDF downloaded successfully.")
-        return response.content
 
     def extract_text(self, pdf_bytes: bytes) -> str:
         try:
@@ -60,9 +41,9 @@ class PDFService:
             logger.exception("Failed to extract PDF content")
             raise
 
-    def extract_from_url(self, pdf_url: str) -> str:
-        pdf_bytes = self.download_pdf(pdf_url)
-        return self.extract_text(pdf_bytes)
+    async def extract_from_url(self, pdf_url: str) -> str:
+        pdf_bytes = await download_pdf(pdf_url)
+        return await asyncio.to_thread(self.extract_text, pdf_bytes)
 
 
 pdf_service = PDFService()

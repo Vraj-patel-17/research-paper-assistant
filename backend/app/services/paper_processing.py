@@ -9,8 +9,15 @@ from app.exceptions.pdf_exceptions import (
     PDFExtractionError,
     EmptyPDFError,
 )
+from app.services.arxiv_client import arxiv_client
 
 ALLOWED_PDF_HOSTS = {"arxiv.org", "export.arxiv.org"}
+
+
+def _normalize_pdf_url(pdf_url: str) -> str:
+    if pdf_url.startswith("http://"):
+        return "https://" + pdf_url[len("http://"):]
+    return pdf_url
 
 
 def _validate_pdf_url(pdf_url: str) -> None:
@@ -26,23 +33,22 @@ def _validate_pdf_url(pdf_url: str) -> None:
 
 
 async def download_pdf(pdf_url: str) -> bytes:
+    pdf_url = _normalize_pdf_url(pdf_url)
     _validate_pdf_url(pdf_url)
 
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(pdf_url)
-            response.raise_for_status()
+        response = await arxiv_client.get(pdf_url)
     except httpx.HTTPError as exc:
         raise PDFDownloadError("Failed to download paper PDF.") from exc
+
+    content_type = response.headers.get("content-type", "").lower()
+    if "application/pdf" not in content_type:
+        raise PDFDownloadError("URL did not return a PDF.")
 
     return response.content
 
 
 def extract_pdf_pages(pdf_bytes: bytes) -> list[tuple[int, str]]:
-    """Returns (page_number, text) for pages with extractable text.
-
-    Page numbers are 1-indexed and preserved across skipped blank pages.
-    """
     try:
         reader = PdfReader(io.BytesIO(pdf_bytes))
         pages = []
@@ -62,7 +68,6 @@ def extract_pdf_pages(pdf_bytes: bytes) -> list[tuple[int, str]]:
 
 
 def extract_pdf_text(pdf_bytes: bytes) -> str:
-    """Backward-compatible flat text (no page metadata)."""
     return "\n".join(text for _, text in extract_pdf_pages(pdf_bytes)).strip()
 
 
@@ -105,11 +110,6 @@ def chunk_pages(
     chunk_size: int = 1200,
     overlap: int = 200,
 ) -> list[tuple[int, str]]:
-    """Chunks each page independently, tagging every chunk with its page
-    number. Order and count here must stay deterministic for a given PDF,
-    since the embedding cache is keyed on chunk position, not on stored
-    text (no chunk text is ever persisted).
-    """
     chunks: list[tuple[int, str]] = []
 
     for page_number, page_text in pages:
